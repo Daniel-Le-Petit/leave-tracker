@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Configuration pour le déploiement statique
-  output: 'export',
+  // Configuration pour le déploiement Web Service
   trailingSlash: true,
   images: {
     unoptimized: true,
