@@ -113,6 +113,18 @@ export default function CumulativeCharts({ leaves, carryovers, currentYear, sett
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white text-center">
                 {monthData.monthName}
               </h3>
+              {/* Totaux du mois */}
+              <div className="mt-2 space-y-1">
+                <div className="text-xs text-gray-600 dark:text-gray-400 text-center">
+                  <span className="font-semibold">+ :</span> RTT {monthData.rtt.prisCeMois} - CP {monthData.cp.prisCeMois} - CET {monthData.cet.prisCeMois}
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 text-center">
+                  <span className="font-semibold">+= :</span> RTT {monthData.rtt.pris} - CP {monthData.cp.pris} - CET {monthData.cet.pris}
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 text-center">
+                  <span className="font-semibold">= :</span> RTT {monthData.rtt.restants} - CP {monthData.cp.restants} - CET {monthData.cet.restants}
+                </div>
+              </div>
             </div>
             <div className="card-body p-4">
               {/* RTT */}
