@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, MapPin, Clock, Gift, Sun, AlertTriangle, TrendingUp, Plus, Edit3, Trash2 } from 'lucide-react';
 import LeaveFormModal from './LeaveFormModal';
+import { getHolidaysForYear } from '../utils/leaveUtils';
 
 interface LeaveCalendarProps {
   leaves: any[];
@@ -412,23 +413,101 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                   const month = monthIndex
                   const year = currentYear
                   
-                  // Calculer les congés pris ce mois
+                  // Calculer les congés pris ce mois (seulement sur les jours ouvrés)
                   const monthLeaves = leaves.filter(leave => {
-                    const leaveDate = new Date(leave.startDate)
-                    return leaveDate.getMonth() === month && leaveDate.getFullYear() === year
+                    const leaveStartDate = new Date(leave.startDate)
+                    const leaveEndDate = new Date(leave.endDate)
+                    
+                    // Vérifier si le congé traverse ce mois
+                    const monthStart = new Date(year, month, 1)
+                    const monthEnd = new Date(year, month + 1, 0)
+                    
+                    if (leaveStartDate > monthEnd || leaveEndDate < monthStart) return false
+                    
+                    // Obtenir tous les jours fériés pour la période du congé (peut couvrir plusieurs années)
+                    const allHolidays = []
+                    const startYear = Math.min(leaveStartDate.getFullYear(), year)
+                    const endYear = Math.max(leaveEndDate.getFullYear(), year)
+                    
+                    for (let y = startYear; y <= endYear; y++) {
+                      allHolidays.push(...getHolidaysForYear(y))
+                    }
+                    
+                    // Calculer les jours ouvrés de ce congé dans ce mois
+                    let workingDaysInMonth = 0
+                    const currentDate = new Date(Math.max(leaveStartDate, monthStart))
+                    const endDate = new Date(Math.min(leaveEndDate, monthEnd))
+                    
+                    while (currentDate <= endDate) {
+                      const dayOfWeek = currentDate.getDay()
+                      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+                      
+                      const isHoliday = allHolidays.some(holiday => 
+                        new Date(holiday.date).toDateString() === currentDate.toDateString()
+                      )
+                      
+                      // Compter seulement les jours ouvrés
+                      if (!isWeekend && !isHoliday) {
+                        workingDaysInMonth++
+                      }
+                      
+                      currentDate.setDate(currentDate.getDate() + 1)
+                    }
+                    
+                    // Retourner le congé avec le nombre de jours ouvrés dans ce mois
+                    return workingDaysInMonth > 0
+                  }).map(leave => {
+                    // Recalculer les jours ouvrés pour ce congé dans ce mois
+                    const leaveStartDate = new Date(leave.startDate)
+                    const leaveEndDate = new Date(leave.endDate)
+                    const monthStart = new Date(year, month, 1)
+                    const monthEnd = new Date(year, month + 1, 0)
+                    
+                    // Obtenir tous les jours fériés pour la période du congé
+                    const allHolidays = []
+                    const startYear = Math.min(leaveStartDate.getFullYear(), year)
+                    const endYear = Math.max(leaveEndDate.getFullYear(), year)
+                    
+                    for (let y = startYear; y <= endYear; y++) {
+                      allHolidays.push(...getHolidaysForYear(y))
+                    }
+                    
+                    let workingDaysInMonth = 0
+                    const currentDate = new Date(Math.max(leaveStartDate, monthStart))
+                    const endDate = new Date(Math.min(leaveEndDate, monthEnd))
+                    
+                    while (currentDate <= endDate) {
+                      const dayOfWeek = currentDate.getDay()
+                      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+                      
+                      const isHoliday = allHolidays.some(holiday => 
+                        new Date(holiday.date).toDateString() === currentDate.toDateString()
+                      )
+                      
+                      if (!isWeekend && !isHoliday) {
+                        workingDaysInMonth++
+                      }
+                      
+                      currentDate.setDate(currentDate.getDate() + 1)
+                    }
+                    
+                    return {
+                      ...leave,
+                      workingDaysInMonth
+                    }
                   })
 
                   const rttTaken = monthLeaves
                     .filter(leave => leave.type === 'rtt')
-                    .reduce((sum, leave) => sum + leave.workingDays, 0)
+                    .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
                   
                   const cpTaken = monthLeaves
                     .filter(leave => leave.type === 'cp')
-                    .reduce((sum, leave) => sum + leave.workingDays, 0)
+                    .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
                   
                   const cetTaken = monthLeaves
                     .filter(leave => leave.type === 'cet')
-                    .reduce((sum, leave) => sum + leave.workingDays, 0)
+                    .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
 
                   // Calculer les cumuls depuis le début de l'année jusqu'à ce mois
                   let cumulativeRTT = 0
@@ -437,21 +516,97 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
 
                   for (let m = 0; m <= month; m++) {
                     const monthLeavesCumul = leaves.filter(leave => {
-                      const leaveDate = new Date(leave.startDate)
-                      return leaveDate.getMonth() === m && leaveDate.getFullYear() === year
+                      const leaveStartDate = new Date(leave.startDate)
+                      const leaveEndDate = new Date(leave.endDate)
+                      
+                      // Vérifier si le congé traverse ce mois
+                      const monthStart = new Date(year, m, 1)
+                      const monthEnd = new Date(year, m + 1, 0)
+                      
+                      if (leaveStartDate > monthEnd || leaveEndDate < monthStart) return false
+                      
+                      // Obtenir tous les jours fériés pour la période du congé
+                      const allHolidays = []
+                      const startYear = Math.min(leaveStartDate.getFullYear(), year)
+                      const endYear = Math.max(leaveEndDate.getFullYear(), year)
+                      
+                      for (let y = startYear; y <= endYear; y++) {
+                        allHolidays.push(...getHolidaysForYear(y))
+                      }
+                      
+                      // Calculer les jours ouvrés de ce congé dans ce mois
+                      let workingDaysInMonth = 0
+                      const currentDate = new Date(Math.max(leaveStartDate, monthStart))
+                      const endDate = new Date(Math.min(leaveEndDate, monthEnd))
+                      
+                      while (currentDate <= endDate) {
+                        const dayOfWeek = currentDate.getDay()
+                        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+                        
+                        const isHoliday = allHolidays.some(holiday => 
+                          new Date(holiday.date).toDateString() === currentDate.toDateString()
+                        )
+                        
+                        if (!isWeekend && !isHoliday) {
+                          workingDaysInMonth++
+                        }
+                        
+                        currentDate.setDate(currentDate.getDate() + 1)
+                      }
+                      
+                      return workingDaysInMonth > 0
+                    }).map(leave => {
+                      // Recalculer les jours ouvrés pour ce congé dans ce mois
+                      const leaveStartDate = new Date(leave.startDate)
+                      const leaveEndDate = new Date(leave.endDate)
+                      const monthStart = new Date(year, m, 1)
+                      const monthEnd = new Date(year, m + 1, 0)
+                      
+                      // Obtenir tous les jours fériés pour la période du congé
+                      const allHolidays = []
+                      const startYear = Math.min(leaveStartDate.getFullYear(), year)
+                      const endYear = Math.max(leaveEndDate.getFullYear(), year)
+                      
+                      for (let y = startYear; y <= endYear; y++) {
+                        allHolidays.push(...getHolidaysForYear(y))
+                      }
+                      
+                      let workingDaysInMonth = 0
+                      const currentDate = new Date(Math.max(leaveStartDate, monthStart))
+                      const endDate = new Date(Math.min(leaveEndDate, monthEnd))
+                      
+                      while (currentDate <= endDate) {
+                        const dayOfWeek = currentDate.getDay()
+                        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+                        
+                        const isHoliday = allHolidays.some(holiday => 
+                          new Date(holiday.date).toDateString() === currentDate.toDateString()
+                        )
+                        
+                        if (!isWeekend && !isHoliday) {
+                          workingDaysInMonth++
+                        }
+                        
+                        currentDate.setDate(currentDate.getDate() + 1)
+                      }
+                      
+                      return {
+                        ...leave,
+                        workingDaysInMonth
+                      }
                     })
 
                     cumulativeRTT += monthLeavesCumul
                       .filter(leave => leave.type === 'rtt')
-                      .reduce((sum, leave) => sum + leave.workingDays, 0)
+                      .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
                     
                     cumulativeCP += monthLeavesCumul
                       .filter(leave => leave.type === 'cp')
-                      .reduce((sum, leave) => sum + leave.workingDays, 0)
+                      .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
                     
                     cumulativeCET += monthLeavesCumul
                       .filter(leave => leave.type === 'cet')
-                      .reduce((sum, leave) => sum + leave.workingDays, 0)
+                      .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
                   }
 
                   // Reliquats de l'année précédente (2024)
