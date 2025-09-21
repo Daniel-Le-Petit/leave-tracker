@@ -376,14 +376,14 @@ export default function Dashboard() {
                 <div className="text-xl sm:text-3xl font-bold text-red-600 dark:text-red-400 mb-1 cursor-help">41</div>
               </CalculationTooltip>
               <div className="flex justify-center space-x-2 mt-2">
-                <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">24</span>
+                <div className="w-8 h-8 bg-white border border-red-500 rounded flex items-center justify-center">
+                  <span className="text-red-500 text-xs font-bold">24</span>
                         </div>
-                <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">12</span>
+                <div className="w-8 h-8 bg-white border border-blue-800 rounded flex items-center justify-center">
+                  <span className="text-blue-800 text-xs font-bold">12</span>
                         </div>
-                <div className="w-8 h-8 bg-cyan-500 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">5</span>
+                <div className="w-8 h-8 bg-white border border-blue-400 rounded flex items-center justify-center">
+                  <span className="text-blue-400 text-xs font-bold">5</span>
                 </div>
               </div>
                         </div>
@@ -407,14 +407,14 @@ export default function Dashboard() {
                 <div className="text-xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-1 cursor-help">9</div>
               </CalculationTooltip>
               <div className="flex justify-center space-x-2 mt-2">
-                <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">2</span>
+                <div className="w-8 h-8 bg-white border border-red-500 rounded flex items-center justify-center">
+                  <span className="text-red-500 text-xs font-bold">2</span>
                               </div>
-                <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">7</span>
+                <div className="w-8 h-8 bg-white border border-blue-800 rounded flex items-center justify-center">
+                  <span className="text-blue-800 text-xs font-bold">7</span>
                             </div>
-                <div className="w-8 h-8 bg-cyan-500 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">0</span>
+                <div className="w-8 h-8 bg-white border border-blue-400 rounded flex items-center justify-center">
+                  <span className="text-blue-400 text-xs font-bold">0</span>
                                   </div>
                                 </div>
                                   </div>
@@ -433,14 +433,14 @@ export default function Dashboard() {
             <div className="p-1 sm:p-4 text-center">
               <div className="text-xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-1">53.5</div>
               <div className="flex justify-center space-x-2 mt-2">
-                <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">3</span>
+                <div className="w-8 h-8 bg-white border border-red-500 rounded flex items-center justify-center">
+                  <span className="text-red-500 text-xs font-bold">3</span>
                                 </div>
-                <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">50.5</span>
+                <div className="w-8 h-8 bg-white border border-blue-800 rounded flex items-center justify-center">
+                  <span className="text-blue-800 text-xs font-bold">50.5</span>
                               </div>
-                <div className="w-8 h-8 bg-cyan-500 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">0</span>
+                <div className="w-8 h-8 bg-white border border-blue-400 rounded flex items-center justify-center">
+                  <span className="text-blue-400 text-xs font-bold">0</span>
                             </div>
                     </div>
                   </div>
@@ -459,14 +459,14 @@ export default function Dashboard() {
             <div className="p-1 sm:p-4 text-center">
               <div className="text-xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-1">62.5</div>
               <div className="flex justify-center space-x-2 mt-2">
-                <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">5</span>
+                <div className="w-8 h-8 bg-white border border-red-500 rounded flex items-center justify-center">
+                  <span className="text-red-500 text-xs font-bold">5</span>
                   </div>
-                <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">57.5</span>
+                <div className="w-8 h-8 bg-white border border-blue-800 rounded flex items-center justify-center">
+                  <span className="text-blue-800 text-xs font-bold">57.5</span>
                         </div>
-                <div className="w-8 h-8 bg-cyan-500 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">0</span>
+                <div className="w-8 h-8 bg-white border border-blue-400 rounded flex items-center justify-center">
+                  <span className="text-blue-400 text-xs font-bold">0</span>
                         </div>
                         </div>
                       </div>

@@ -72,7 +72,7 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
 
     // Trier par date de modification (plus récent en premier)
     return filtered.sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime());
-  }, [leaves, currentYear, selectedTypes, dateFilter]);
+  }, [leaves, currentYear, selectedTypes, dateFilter, includeForecast, includeReal]);
 
   // Obtenir les congés sélectionnés
   const selectedLeaveEntries = useMemo(() => {
@@ -182,6 +182,15 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
       setIncludeForecast(true); // Par défaut, cocher Prévision
     }
   }, [includeForecast, includeReal]);
+
+  // Désélectionner les congés qui ne sont plus visibles après le changement de filtre
+  useEffect(() => {
+    const visibleLeaveIds = filteredLeaves.map(leave => leave.id);
+    const filteredSelectedLeaves = selectedLeaves.filter(id => visibleLeaveIds.includes(id));
+    if (filteredSelectedLeaves.length !== selectedLeaves.length) {
+      setSelectedLeaves(filteredSelectedLeaves);
+    }
+  }, [filteredLeaves, selectedLeaves]);
 
   const selectAllVisible = () => {
     const visibleIds = filteredLeaves.map(leave => leave.id);
@@ -347,26 +356,46 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
             <Mail className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              Envoyer le rapport de congés
+              Rapport de Congés
             </h2>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            title="Fermer la fenêtre"
-          >
-            <X className="h-6 w-6" />
-          </button>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting || selectedLeaves.length === 0}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+              title={selectedLeaves.length === 0 ? "Sélectionnez des congés à envoyer" : "Envoyer le rapport par email"}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Envoi...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  <span>Envoyer le rapport</span>
+                </>
+              )}
+            </button>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              title="Fermer la fenêtre"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
+        <div className="p-6 overflow-y-auto max-h-[70vh]">
           {isSubmitted ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -380,265 +409,282 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
               </p>
             </div>
           ) : (
-            <>
-              {/* Interface principale */}
-                <div className="space-y-4">
-                  {/* Filtres */}
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-gray-900 dark:text-white">Filtres</h4>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={selectAllVisible}
-                          className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
-                          title="Sélectionner tous les congés visibles"
-                        >
-                          Tout sélectionner
-                        </button>
-                        <button
-                          onClick={clearSelection}
-                          className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
-                          title="Effacer la sélection"
-                        >
-                          Effacer
-                        </button>
-                      </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Panel de filtres */}
+              <div className="lg:col-span-1">
+                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 h-fit">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Filtres</h3>
+                  
+                  {/* Types de congés */}
+                  <div className="mb-6">
+                    <div className="flex items-center mb-3">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Type de congés</span>
                     </div>
-                    
-                    {/* Types de congés */}
-                    <div className="flex space-x-4 mb-3">
+                    <div className="flex flex-wrap gap-2">
                       {(['rtt', 'cp', 'cet'] as const).map(type => (
-                        <label key={type} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={selectedTypes.includes(type)}
-                            onChange={() => toggleTypeFilter(type)}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {getLeaveTypeIcon(type)} {getLeaveTypeLabel(type)}
-                          </span>
-                        </label>
+                        <button
+                          key={type}
+                          onClick={() => toggleTypeFilter(type)}
+                          className={`flex items-center px-3 py-2 rounded-full border transition-all ${
+                            selectedTypes.includes(type)
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          <span className="mr-2">{getLeaveTypeIcon(type)}</span>
+                          <span className="text-sm">{getLeaveTypeLabel(type)}</span>
+                        </button>
                       ))}
-                    </div>
-
-                    {/* Sélection du statut des congés */}
-                    <div className="mb-3">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Type de congés à inclure :
-                      </label>
-                      <div className="flex space-x-4">
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={includeForecast}
-                            onChange={(e) => handleForecastChange(e.target.checked)}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            🔄 Prévision
-                          </span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={includeReal}
-                            onChange={(e) => handleRealChange(e.target.checked)}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            🏖️ Réel
-                          </span>
-                        </label>
-                      </div>
-                      {includeForecast && (
-                        <div className="mt-2 text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-1 rounded">
-                          Les congés en prévision seront passés en réel après l'envoi
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Filtre de période */}
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-700 dark:text-gray-300">Période:</span>
-                      <select
-                        value={dateFilter}
-                        onChange={(e) => setDateFilter(e.target.value as any)}
-                        className="text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                        title="Sélectionner la période"
-                      >
-                        <option value="last_week">Dernière semaine</option>
-                        <option value="last_month">Dernier mois</option>
-                        <option value="current_month">Mois en cours</option>
-                        <option value="all">Toutes les dates</option>
-                      </select>
                     </div>
                   </div>
 
-                  {/* Liste des congés */}
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {filteredLeaves.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                        Aucun congé trouvé avec les filtres sélectionnés
+                  {/* Statut du congé */}
+                  <div className="mb-6">
+                    <div className="flex items-center mb-3">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Statut du congé</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => handleForecastChange(!includeForecast)}
+                        className={`flex items-center px-3 py-2 rounded-full border transition-all ${
+                          includeForecast
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        <span className="mr-2">🔄</span>
+                        <span className="text-sm">Prévision</span>
+                      </button>
+                      <button
+                        onClick={() => handleRealChange(!includeReal)}
+                        className={`flex items-center px-3 py-2 rounded-full border transition-all ${
+                          includeReal
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        <span className="mr-2">🏖️</span>
+                        <span className="text-sm">Réel</span>
+                      </button>
+                    </div>
+                    {includeForecast && (
+                      <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
+                        Les congés en prévision seront passés en réel après l'envoi.
                       </div>
-                    ) : (
-                      filteredLeaves.map(leave => (
-                        <div
-                          key={leave.id}
-                          className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                            selectedLeaves.includes(leave.id)
-                              ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-                              : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    )}
+                  </div>
+
+                  {/* Période */}
+                  <div className="mb-6">
+                    <div className="flex items-center mb-3">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Période</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { key: 'last_week', label: 'Dernière semaine' },
+                        { key: 'last_month', label: 'Dernier mois' },
+                        { key: 'current_month', label: 'Mois en cours' },
+                        { key: 'all', label: 'Toutes les dates' }
+                      ].map(period => (
+                        <button
+                          key={period.key}
+                          onClick={() => setDateFilter(period.key as any)}
+                          className={`px-3 py-2 rounded-full border transition-all text-sm ${
+                            dateFilter === period.key
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
                           }`}
                         >
-                          <div className="flex items-center space-x-3">
+                          {period.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Actions rapides */}
+                  <div className="mb-6">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={selectAllVisible}
+                        className="text-xs px-3 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                        title="Sélectionner tous les congés visibles"
+                      >
+                        Tout sélectionner
+                      </button>
+                      <button
+                        onClick={clearSelection}
+                        className="text-xs px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        title="Effacer la sélection"
+                      >
+                        Effacer
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Liste des congés disponibles */}
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Congés disponibles</h4>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                        {filteredLeaves.length} congé{filteredLeaves.length > 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {filteredLeaves.length === 0 ? (
+                        <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
+                          Aucun congé trouvé avec les filtres sélectionnés
+                        </div>
+                      ) : (
+                        filteredLeaves.map(leave => (
+                          <div
+                            key={leave.id}
+                            className={`flex items-start p-3 border rounded-lg transition-colors cursor-pointer ${
+                              selectedLeaves.includes(leave.id)
+                                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                                : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                            }`}
+                            onClick={() => toggleLeaveSelection(leave.id)}
+                          >
                             <input
                               type="checkbox"
                               checked={selectedLeaves.includes(leave.id)}
                               onChange={() => toggleLeaveSelection(leave.id)}
-                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              className="mt-1 mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                               title={`Sélectionner le congé ${getLeaveTypeLabel(leave.type)} du ${format(new Date(leave.startDate), 'dd/MM/yyyy', { locale: fr })}`}
                             />
-                            <div>
-                              <div className="flex items-center space-x-2">
-                                <span>{getLeaveTypeIcon(leave.type)}</span>
-                                <span className="font-medium text-gray-900 dark:text-white">
-                                  {format(new Date(leave.startDate), 'dd MMM yyyy', { locale: fr })}
-                                  {leave.startDate !== leave.endDate && 
-                                    ` - ${format(new Date(leave.endDate), 'dd MMM yyyy', { locale: fr })}`
-                                  }
-                                </span>
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                  leave.type === 'rtt' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
-                                  leave.type === 'cp' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
-                                  'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                                }`}>
-                                  {getLeaveTypeLabel(leave.type)}
-                                </span>
-                                {leave.isForecast && (
-                                  <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
-                                    (P)
-                                  </span>
-                                )}
+                            <div className="mr-3 text-lg">{getLeaveTypeIcon(leave.type)}</div>
+                            <div className="flex-1">
+                              <div className="font-medium text-sm text-gray-900 dark:text-white">
+                                {format(new Date(leave.startDate), 'dd MMM yyyy', { locale: fr })}
+                                {leave.startDate !== leave.endDate && 
+                                  ` - ${format(new Date(leave.endDate), 'dd MMM yyyy', { locale: fr })}`
+                                }
                               </div>
-                              <div className="text-sm text-gray-600 dark:text-gray-400">
-                                {leave.workingDays} jour{leave.workingDays > 1 ? 's' : ''} • 
-                                Modifié {(() => {
-                                  const dateStr = leave.updatedAt || leave.createdAt;
-                                  if (!dateStr) return 'Date inconnue';
-                                  const date = new Date(dateStr);
-                                  if (isNaN(date.getTime())) return 'Date invalide';
-                                  return format(date, 'dd/MM à HH:mm', { locale: fr });
-                                })()}
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                {leave.workingDays} jour{leave.workingDays > 1 ? 's' : ''} de {getLeaveTypeLabel(leave.type)}
                               </div>
                             </div>
+                            <div className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300">
+                              {leave.isForecast ? 'En prévision' : 'Réel'}
+                            </div>
                           </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Vos congés sélectionnés */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Vos congés sélectionnés</h4>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {selectedLeaveEntries.length === 0 ? (
+                        <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
+                          Aucun congé sélectionné
                         </div>
-                      ))
-                    )}
+                      ) : (
+                        selectedLeaveEntries.map(leave => (
+                          <div
+                            key={leave.id}
+                            className="flex items-start p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                          >
+                            <div className="mr-3 text-lg">{getLeaveTypeIcon(leave.type)}</div>
+                            <div className="flex-1">
+                              <div className="font-medium text-sm text-gray-900 dark:text-white">
+                                {format(new Date(leave.startDate), 'dd MMM yyyy', { locale: fr })}
+                                {leave.startDate !== leave.endDate && 
+                                  ` - ${format(new Date(leave.endDate), 'dd MMM yyyy', { locale: fr })}`
+                                }
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                {leave.workingDays} jour{leave.workingDays > 1 ? 's' : ''} de {getLeaveTypeLabel(leave.type)}
+                              </div>
+                            </div>
+                            <div className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300">
+                              {leave.isForecast ? 'En prévision' : 'Réel'}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </div>
                 </div>
+              </div>
 
-              {/* Preview et résumé */}
-              {selectedLeaves.length > 0 && (
-                <div className="mt-6 space-y-4">
-                  {/* Résumé */}
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                    <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">
-                      Résumé des congés sélectionnés
-                    </h4>
-                    <div className="grid grid-cols-3 gap-4 text-sm mb-3">
-                      <div>
-                        <span className="font-medium text-blue-800 dark:text-blue-300">RTT:</span>
-                        <span className="ml-2 text-blue-700 dark:text-blue-400">
-                          {selectedLeaveEntries.filter(l => l.type === 'rtt').reduce((sum, l) => sum + l.workingDays, 0)} jours
-                        </span>
-                      </div>
-                      <div>
-                        <span className="font-medium text-blue-800 dark:text-blue-300">CP:</span>
-                        <span className="ml-2 text-blue-700 dark:text-blue-400">
-                          {selectedLeaveEntries.filter(l => l.type === 'cp').reduce((sum, l) => sum + l.workingDays, 0)} jours
-                        </span>
-                      </div>
-                      <div>
-                        <span className="font-medium text-blue-800 dark:text-blue-300">CET:</span>
-                        <span className="ml-2 text-blue-700 dark:text-blue-400">
-                          {selectedLeaveEntries.filter(l => l.type === 'cet').reduce((sum, l) => sum + l.workingDays, 0)} jours
-                        </span>
+              {/* Panel de prévisualisation */}
+              <div className="lg:col-span-2">
+                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Résumé du rapport</h3>
+                  
+                  {/* Résumé des congés */}
+                  <div className="grid grid-cols-3 gap-3 mb-6">
+                    <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">RTT</div>
+                      <div className="text-xl font-semibold text-red-600 dark:text-red-400">
+                        {selectedLeaveEntries.filter(l => l.type === 'rtt').reduce((sum, l) => sum + l.workingDays, 0)} jours
                       </div>
                     </div>
-                    {selectedLeaveEntries.some(leave => leave.isForecast) && (
-                      <div className="text-xs text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/30 rounded p-2">
-                        📅 {selectedLeaveEntries.filter(l => l.isForecast).length} congé(s) en prévision seront passés en réel après l'envoi
+                    <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">CP</div>
+                      <div className="text-xl font-semibold text-green-600 dark:text-green-400">
+                        {selectedLeaveEntries.filter(l => l.type === 'cp').reduce((sum, l) => sum + l.workingDays, 0)} jours
                       </div>
-                    )}
+                    </div>
+                    <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">CET</div>
+                      <div className="text-xl font-semibold text-yellow-600 dark:text-yellow-400">
+                        {selectedLeaveEntries.filter(l => l.type === 'cet').reduce((sum, l) => sum + l.workingDays, 0)} jours
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Aperçu email */}
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Aperçu de l'email</h4>
-                    <div className="font-mono text-sm">
-                      <div className="text-gray-600 dark:text-gray-400 mb-2">
-                        <strong>À:</strong> dlepetit.maa@gmail.com
+                  {selectedLeaveEntries.some(leave => leave.isForecast) && (
+                    <div className="mb-4 text-sm text-purple-600 dark:text-purple-400 italic">
+                      Ces congés en prévision seront passés en réel.
+                    </div>
+                  )}
+
+                  {/* Aperçu de l'email */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Aperçu de l'email</h4>
+                    
+                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                      <div className="mb-4 pb-3 border-b border-gray-200 dark:border-gray-600">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                          À: dlepetit.maa@gmail.com
+                        </div>
+                        <div className="font-medium text-gray-900 dark:text-white">
+                          Objet: Rapport de congés {currentYear}
+                        </div>
                       </div>
-                      <div className="text-gray-600 dark:text-gray-400 mb-4">
-                        <strong>Objet:</strong> Rapport de congés {currentYear}
-                      </div>
-                      <div className="whitespace-pre-line text-gray-900 dark:text-white bg-white dark:bg-gray-800 p-3 rounded border">
+                      
+                      <div className="text-sm leading-relaxed whitespace-pre-line text-gray-900 dark:text-white">
                         {generateEmailContent()}
                       </div>
                     </div>
                   </div>
                 </div>
-              )}
-            </>
+              </div>
+            </div>
           )}
         </div>
 
-        {/* Footer */}
+        {/* Status indicator */}
         {!isSubmitted && (
-          <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-            <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-              {selectedLeaves.length > 0 ? (
-                <>
-                  <Check className="h-4 w-4 text-green-600" />
-                  <span>{selectedLeaves.length} congé{selectedLeaves.length > 1 ? 's' : ''} sélectionné{selectedLeaves.length > 1 ? 's' : ''}</span>
-                </>
-              ) : (
-                <>
-                  <Eye className="h-4 w-4" />
-                  <span>Sélectionnez des congés pour l'email</span>
-                </>
-              )}
-            </div>
-            <div className="flex space-x-3">
-              <button
-                onClick={onClose}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={isSubmitting || selectedLeaves.length === 0}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-                title={selectedLeaves.length === 0 ? "Sélectionnez des congés à envoyer" : "Envoyer le rapport par email"}
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Envoi...</span>
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    <span>Envoyer</span>
-                  </>
-                )}
-              </button>
-            </div>
+          <div className="absolute bottom-4 left-4 flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+            {selectedLeaves.length > 0 ? (
+              <>
+                <Check className="h-4 w-4 text-green-600" />
+                <span>{selectedLeaves.length} congé{selectedLeaves.length > 1 ? 's' : ''} sélectionné{selectedLeaves.length > 1 ? 's' : ''}</span>
+              </>
+            ) : (
+              <>
+                <Eye className="h-4 w-4" />
+                <span>Sélectionnez des congés pour l'email</span>
+              </>
+            )}
           </div>
         )}
+
       </div>
     </div>
   );

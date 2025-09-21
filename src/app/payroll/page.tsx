@@ -576,6 +576,7 @@ POSSIBLES CAUSES:
                     setSelectedMonth(parseInt(e.target.value))
                   }}
                   className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  title="Sélectionner le mois"
                 >
                   {monthNames.map((month, index) => (
                     <option key={index} value={index + 1}>{month}</option>
@@ -597,6 +598,8 @@ POSSIBLES CAUSES:
                   className="w-20 px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   min="2020"
                   max="2030"
+                  title="Sélectionner l'année"
+                  placeholder="2025"
                 />
               </div>
           </div>
@@ -735,6 +738,40 @@ POSSIBLES CAUSES:
               </div>
             </div>
             
+        {/* Explications des boutons */}
+        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-3">💡 Explication des boutons</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="flex items-start space-x-2">
+              <span className="text-green-600 dark:text-green-400 font-bold">💾</span>
+              <div>
+                <div className="font-medium text-blue-800 dark:text-blue-300">Sauvegarder</div>
+                <div className="text-blue-700 dark:text-blue-400">
+                  Enregistre les données saisies dans le navigateur pour ce mois/année. Les données sont conservées localement et peuvent être récupérées plus tard.
+                </div>
+              </div>
+            </div>
+            <div className="flex items-start space-x-2">
+              <span className="text-blue-600 dark:text-blue-400 font-bold">✓</span>
+              <div>
+                <div className="font-medium text-blue-800 dark:text-blue-300">Valider les Données</div>
+                <div className="text-blue-700 dark:text-blue-400">
+                  Vérifie la cohérence et la validité des données saisies. Affiche des erreurs ou avertissements si nécessaire.
+                </div>
+              </div>
+            </div>
+            <div className="flex items-start space-x-2">
+              <span className="text-red-600 dark:text-red-400 font-bold">🗑️</span>
+              <div>
+                <div className="font-medium text-blue-800 dark:text-blue-300">Supprimer</div>
+                <div className="text-blue-700 dark:text-blue-400">
+                  Efface définitivement toutes les données saisies pour ce mois/année. Cette action est irréversible.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+            
         <div className="flex justify-between items-center mt-6">
           <div className="text-sm text-gray-500 dark:text-gray-400">
             {payrollDataByMonth[getMonthYearKey(selectedMonth, currentYear)] && (
@@ -745,14 +782,40 @@ POSSIBLES CAUSES:
             <button 
               onClick={saveCurrentMonthData}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+              title="💾 Sauvegarder : Enregistre les données saisies dans le navigateur pour ce mois/année. Les données sont conservées localement et peuvent être récupérées plus tard."
             >
               💾 Sauvegarder
             </button>
             <button 
               onClick={validatePayrollData}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              title="Valider les Données : Vérifie la cohérence et la validité des données saisies. Affiche des erreurs ou avertissements si nécessaire."
             >
               Valider les Données
+            </button>
+            <button 
+              onClick={() => {
+                const key = getMonthYearKey(selectedMonth, currentYear);
+                const newData = { ...payrollDataByMonth };
+                delete newData[key];
+                setPayrollDataByMonth(newData);
+                savePayrollDataToStorage(newData);
+                setPayrollData({
+                  month: selectedMonth,
+                  year: currentYear,
+                  cpReliquat: 47.5,
+                  rttPrisDansMois: 0,
+                  soldeCet: 5,
+                  cpPrisMoisPrecedent: [],
+                  cetPrisMoisPrecedent: [],
+                  joursFeries: []
+                });
+                toast.success(`Données supprimées pour ${monthNames[selectedMonth - 1]} ${currentYear}`);
+              }}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+              title="Supprimer : Efface définitivement toutes les données saisies pour ce mois/année. Cette action est irréversible."
+            >
+              🗑️ Supprimer
             </button>
           </div>
               </div>
