@@ -93,9 +93,9 @@ export default function PayrollPage() {
     // Délai pour éviter trop de sauvegardes pendant la saisie
     const timeoutId = setTimeout(() => {
       // Ne sauvegarder que si au moins une valeur a été saisie (pas undefined)
-      const hasData = (payrollData.cpReliquat !== undefined && payrollData.cpReliquat !== '') ||
-                     (payrollData.rttPrisDansMois !== undefined && payrollData.rttPrisDansMois !== '') ||
-                     (payrollData.soldeCet !== undefined && payrollData.soldeCet !== '') ||
+      const hasData = (payrollData.cpReliquat !== undefined) ||
+                     (payrollData.rttPrisDansMois !== undefined) ||
+                     (payrollData.soldeCet !== undefined) ||
                      (payrollData.cpPrisMoisPrecedent && payrollData.cpPrisMoisPrecedent.length > 0) ||
                      (payrollData.cetPrisMoisPrecedent && payrollData.cetPrisMoisPrecedent.length > 0)
       
@@ -875,8 +875,8 @@ POSSIBLES CAUSES:
             )}
           </div>
           <div className="flex space-x-4">
-            <button 
-              onClick={saveCurrentMonthData}
+            <button
+              onClick={() => saveCurrentMonthData(true)}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
               title="💾 Sauvegarder : Enregistre les données saisies dans le navigateur pour ce mois/année. Les données sont conservées localement et peuvent être récupérées plus tard."
             >
