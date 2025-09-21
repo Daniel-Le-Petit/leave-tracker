@@ -501,7 +501,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                             </thead>
                             <tbody>
                               <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">Pris</td>
+                                <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">Pris en {monthNames[month]}</td>
                                 <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-red-700 dark:text-red-400">{rttTaken}</td>
                                 <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-blue-800 dark:text-blue-400">{cpTaken}</td>
                                 <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-blue-600 dark:text-blue-400">{cetTaken}</td>
