@@ -188,40 +188,18 @@ export default function CarryoverPage() {
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mobile-safe-area">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Résumé */}
+          {/* Formulaire d'ajout/édition */}
           <div className="lg:col-span-1">
-            <div className="card">
-              <div className="card-header">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  📊 Résumé des reliquats
-                </h2>
-              </div>
-              <div className="card-body space-y-4">
-                {leaveTypes.map((type) => {
-                  const total = summary.totalByType[type.value as LeaveType]
-                  return total > 0 ? (
-                    <div key={type.value} className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {type.label.split(' - ')[0]}
-                      </span>
-                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                         type.value === 'cp' ? 'bg-blue-100 text-blue-800' 
-                         : type.value === 'rtt' ? 'bg-green-100 text-green-800'
-                         : type.value === 'cet' ? 'bg-purple-100 text-purple-800'
-                 
-                         : 'bg-gray-100 text-gray-800'
-                       }`}>
-                        {total} jour{total > 1 ? 's' : ''}
-                      </span>
-                    </div>
-                  ) : null
-                })}
-                
-                {Object.values(summary.totalByType).every(total => total === 0) && (
-                  <div className="text-center text-gray-500 dark:text-gray-400 py-4">
-                    Aucun reliquat enregistré
-                  </div>
-                )}
+            {/* Bouton pour afficher/masquer le formulaire */}
+            <div className="card mb-6">
+              <div className="card-body">
+                <button
+                  onClick={() => setShowAddForm(!showAddForm)}
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{showAddForm ? 'Masquer le formulaire' : 'Ajouter un reliquat'}</span>
+                </button>
               </div>
             </div>
 
@@ -377,65 +355,77 @@ export default function CarryoverPage() {
                     <p className="text-sm mt-2">Cliquez sur "Ajouter un reliquat" pour commencer</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {Object.entries(summary.byYear)
-                      .sort(([a], [b]) => parseInt(b) - parseInt(a)) // Trier par année décroissante
-                      .map(([year, yearCarryovers]) => (
-                        <div key={year} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                            Année {year}
-                          </h3>
-                          <div className="space-y-2">
-                            {yearCarryovers.map((carryover) => {
-                              const typeInfo = leaveTypes.find(t => t.value === carryover.type)
-                              return (
-                                <div
-                                  key={carryover.id}
-                                  className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                                >
-                                  <div className="flex-1">
-                                    <div className="flex items-center space-x-3">
-                                                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                         typeInfo?.value === 'cp' ? 'bg-blue-100 text-blue-800' 
-                                         : typeInfo?.value === 'rtt' ? 'bg-green-100 text-green-800'
-                                         : typeInfo?.value === 'cet' ? 'bg-purple-100 text-purple-800'
-
-                                         : 'bg-gray-100 text-gray-800'
-                                       }`}>
-                                        {typeInfo?.label.split(' - ')[0]}
-                                      </span>
-                                      <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                        {carryover.days} jour{carryover.days > 1 ? 's' : ''}
-                                      </span>
-                                    </div>
-                                    {carryover.description && (
-                                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                        {carryover.description}
-                                      </p>
-                                    )}
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full border-collapse border border-gray-200 dark:border-gray-700">
+                      <thead>
+                        <tr className="bg-gray-50 dark:bg-gray-800">
+                          <th className="border border-gray-200 dark:border-gray-700 px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-300">
+                            Année
+                          </th>
+                          <th className="border border-gray-200 dark:border-gray-700 px-4 py-2 text-center font-semibold text-white bg-blue-800">
+                            CP
+                          </th>
+                          <th className="border border-gray-200 dark:border-gray-700 px-4 py-2 text-center font-semibold text-white bg-red-500">
+                            RTT
+                          </th>
+                          <th className="border border-gray-200 dark:border-gray-700 px-4 py-2 text-center font-semibold text-white bg-blue-400">
+                            CET
+                          </th>
+                          <th className="border border-gray-200 dark:border-gray-700 px-4 py-2 text-center font-semibold text-gray-700 dark:text-gray-300">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(summary.byYear)
+                          .sort(([a], [b]) => parseInt(b) - parseInt(a)) // Trier par année décroissante
+                          .map(([year, yearCarryovers]) => {
+                            // Grouper par année et calculer les totaux
+                            const cpTotal = yearCarryovers.filter(c => c.type === 'cp').reduce((sum, c) => sum + c.days, 0)
+                            const rttTotal = yearCarryovers.filter(c => c.type === 'rtt').reduce((sum, c) => sum + c.days, 0)
+                            const cetTotal = yearCarryovers.filter(c => c.type === 'cet').reduce((sum, c) => sum + c.days, 0)
+                            
+                            return (
+                              <tr key={year} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                <td className="border border-gray-200 dark:border-gray-700 px-4 py-2 font-medium text-gray-900 dark:text-white">
+                                  {year}
+                                </td>
+                                <td className="border border-gray-200 dark:border-gray-700 px-4 py-2 text-center font-semibold text-blue-800 dark:text-blue-400">
+                                  {cpTotal > 0 ? `${cpTotal}` : '-'}
+                                </td>
+                                <td className="border border-gray-200 dark:border-gray-700 px-4 py-2 text-center font-semibold text-red-700 dark:text-red-400">
+                                  {rttTotal > 0 ? `${rttTotal}` : '-'}
+                                </td>
+                                <td className="border border-gray-200 dark:border-gray-700 px-4 py-2 text-center font-semibold text-blue-600 dark:text-blue-400">
+                                  {cetTotal > 0 ? `${cetTotal}` : '-'}
+                                </td>
+                                <td className="border border-gray-200 dark:border-gray-700 px-4 py-2 text-center">
+                                  <div className="flex justify-center space-x-2">
+                                    {yearCarryovers.map((carryover) => (
+                                      <div key={carryover.id} className="flex space-x-1">
+                                        <button
+                                          onClick={() => handleEdit(carryover)}
+                                          className="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200"
+                                          title="Modifier"
+                                        >
+                                          <Save className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                          onClick={() => handleDelete(carryover.id)}
+                                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+                                          title="Supprimer"
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    ))}
                                   </div>
-                                  <div className="flex space-x-2">
-                                    <button
-                                      onClick={() => handleEdit(carryover)}
-                                      className="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200"
-                                      title="Modifier"
-                                    >
-                                      <Save className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleDelete(carryover.id)}
-                                      className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
-                                      title="Supprimer"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      ))}
+                                </td>
+                              </tr>
+                            )
+                          })}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>

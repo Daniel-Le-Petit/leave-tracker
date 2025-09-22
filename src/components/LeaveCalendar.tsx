@@ -438,21 +438,35 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                     const currentDate = new Date(Math.max(leaveStartDate, monthStart))
                     const endDate = new Date(Math.min(leaveEndDate, monthEnd))
                     
-                    while (currentDate <= endDate) {
-                      const dayOfWeek = currentDate.getDay()
-                      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-                      
-                      const isHoliday = allHolidays.some(holiday => 
-                        new Date(holiday.date).toDateString() === currentDate.toDateString()
-                      )
-                      
-                      // Compter seulement les jours ouvrés
-                      if (!isWeekend && !isHoliday) {
-                        workingDaysInMonth++
+                      while (currentDate <= endDate) {
+                        const dayOfWeek = currentDate.getDay()
+                        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+                        
+                        const isHoliday = allHolidays.some(holiday => 
+                          new Date(holiday.date).toDateString() === currentDate.toDateString()
+                        )
+                        
+                        // Debug pour le 1er janvier 2026
+                        if (currentDate.toDateString() === 'Thu Jan 01 2026') {
+                          console.log('Debug 1er janvier 2026:', {
+                            date: currentDate.toDateString(),
+                            dayOfWeek,
+                            isWeekend,
+                            isHoliday,
+                            allHolidays: allHolidays.map(h => ({ date: h.date, name: h.name })),
+                            matchingHoliday: allHolidays.find(h => 
+                              new Date(h.date).toDateString() === currentDate.toDateString()
+                            )
+                          })
+                        }
+                        
+                        // Compter seulement les jours ouvrés
+                        if (!isWeekend && !isHoliday) {
+                          workingDaysInMonth++
+                        }
+                        
+                        currentDate.setDate(currentDate.getDate() + 1)
                       }
-                      
-                      currentDate.setDate(currentDate.getDate() + 1)
-                    }
                     
                     // Retourner le congé avec le nombre de jours ouvrés dans ce mois
                     return workingDaysInMonth > 0
@@ -483,6 +497,20 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                       const isHoliday = allHolidays.some(holiday => 
                         new Date(holiday.date).toDateString() === currentDate.toDateString()
                       )
+                      
+                      // Debug pour le 1er janvier 2026
+                      if (currentDate.toDateString() === 'Thu Jan 01 2026') {
+                        console.log('Debug 1er janvier 2026 (map):', {
+                          date: currentDate.toDateString(),
+                          dayOfWeek,
+                          isWeekend,
+                          isHoliday,
+                          allHolidays: allHolidays.map(h => ({ date: h.date, name: h.name })),
+                          matchingHoliday: allHolidays.find(h => 
+                            new Date(h.date).toDateString() === currentDate.toDateString()
+                          )
+                        })
+                      }
                       
                       if (!isWeekend && !isHoliday) {
                         workingDaysInMonth++
@@ -609,31 +637,85 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                       .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
                   }
 
-                  // Reliquats de l'année précédente (2024)
-                  const rttReliquat2024 = 7
-                  const cpReliquat2024 = 43.5
-                  const cetReliquat2024 = 5
-
-                  // Quotas annuels 2025
-                  const rttQuota2025 = 23
-                  const cpQuota2025 = 27 // Ajouté au 31/05
-                  const cetQuota2025 = 0 // Pas de quota CET en 2025
-
-                  // Calculer les restants selon la période
+                  // Calculer les restants selon l'année
                   let rttRemaining, cpRemaining, cetRemaining
 
-                  // RTT : reliquat + quota dès janvier
-                  rttRemaining = Math.max(0, rttReliquat2024 + rttQuota2025 - cumulativeRTT)
+                  if (year === 2025) {
+                    // Reliquats de l'année précédente (2024)
+                    const rttReliquat2024 = 7
+                    const cpReliquat2024 = 43.5
+                    const cetReliquat2024 = 5
 
-                  // CP : reliquat seulement jusqu'en mai, puis + quota au 31/05
-                  if (month < 4) { // Janvier à Avril (0-3)
-                    cpRemaining = Math.max(0, cpReliquat2024 - cumulativeCP)
-                  } else { // Mai et après (4+)
-                    cpRemaining = Math.max(0, cpReliquat2024 + cpQuota2025 - cumulativeCP)
+                    // Quotas annuels 2025
+                    const rttQuota2025 = 23
+                    const cpQuota2025 = 27 // Ajouté au 31/05
+                    const cetQuota2025 = 0 // Pas de quota CET en 2025
+
+                    // RTT : reliquat + quota dès janvier
+                    rttRemaining = Math.max(0, rttReliquat2024 + rttQuota2025 - cumulativeRTT)
+
+                    // CP : reliquat seulement jusqu'en avril, puis + quota au 31/05
+                    if (month < 4) { // Janvier à Avril (0-3)
+                      cpRemaining = Math.max(0, cpReliquat2024 - cumulativeCP)
+                    } else { // Mai et après (4+)
+                      cpRemaining = Math.max(0, cpReliquat2024 + cpQuota2025 - cumulativeCP)
+                    }
+
+                    // CET : reliquat seulement (pas de quota)
+                    cetRemaining = Math.max(0, cetReliquat2024 + cetQuota2025 - cumulativeCET)
+                  } else if (year === 2026) {
+                    // Pour 2026, les reliquats viennent de 2025
+                    const rttReliquat2025 = 4 // RTT restant de 2025
+                    const cpReliquat2025 = 48.5 // CP restant de 2025 (43.5 + 27 - 22 pris)
+                    const cetReliquat2025 = 0 // CET liquidés en 2025
+
+                    // Quotas annuels 2026
+                    const rttQuota2026 = 23
+                    const cpQuota2026 = 27 // Ajouté au 31/05
+                    const cetQuota2026 = 0 // Pas de quota CET en 2026
+
+                    // RTT : reliquat + quota dès janvier
+                    rttRemaining = Math.max(0, rttReliquat2025 + rttQuota2026 - cumulativeRTT)
+
+                    // CP : reliquat seulement jusqu'en avril, puis + quota au 31/05
+                    if (month < 4) { // Janvier à Avril (0-3)
+                      cpRemaining = Math.max(0, cpReliquat2025 - cumulativeCP)
+                    } else { // Mai et après (4+)
+                      cpRemaining = Math.max(0, cpReliquat2025 + cpQuota2026 - cumulativeCP)
+                    }
+
+                    // CET : reliquat seulement (pas de quota)
+                    cetRemaining = Math.max(0, cetReliquat2025 + cetQuota2026 - cumulativeCET)
+                    
+                    // Debug pour janvier 2026
+                    if (month === 0 && year === 2026) {
+                      console.log('Janvier 2026 Debug:', {
+                        monthLeaves: monthLeaves.map(l => ({
+                          id: l.id,
+                          type: l.type,
+                          startDate: l.startDate,
+                          endDate: l.endDate,
+                          workingDaysInMonth: l.workingDaysInMonth
+                        })),
+                        rttReliquat2025,
+                        rttQuota2026,
+                        cumulativeRTT,
+                        rttRemaining,
+                        cpReliquat2025,
+                        cumulativeCP,
+                        cpRemaining,
+                        cetReliquat2025,
+                        cetQuota2026,
+                        cumulativeCET,
+                        cetRemaining
+                      })
+                    }
+                  } else {
+                    // Années futures (par défaut)
+                    rttRemaining = Math.max(0, 23 - cumulativeRTT)
+                    cpRemaining = Math.max(0, 27 - cumulativeCP)
+                    cetRemaining = Math.max(0, 0 - cumulativeCET)
                   }
-
-                  // CET : reliquat seulement (pas de quota)
-                  cetRemaining = Math.max(0, cetReliquat2024 + cetQuota2025 - cumulativeCET)
 
                   return (
                     <div key={month} className="flex-shrink-0 w-80">
