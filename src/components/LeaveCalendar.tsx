@@ -450,8 +450,8 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                     
                     // Calculer les jours ouvrés de ce congé dans ce mois
                     let workingDaysInMonth = 0
-                    const currentDate = new Date(Math.max(leaveStartDate, monthStart))
-                    const endDate = new Date(Math.min(leaveEndDate, monthEnd))
+                    const currentDate = new Date(Math.max(leaveStartDate.getTime(), monthStart.getTime()))
+                    const endDate = new Date(Math.min(leaveEndDate.getTime(), monthEnd.getTime()))
                     
                       while (currentDate <= endDate) {
                         const dayOfWeek = currentDate.getDay()
@@ -502,8 +502,8 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                     }
                     
                     let workingDaysInMonth = 0
-                    const currentDate = new Date(Math.max(leaveStartDate, monthStart))
-                    const endDate = new Date(Math.min(leaveEndDate, monthEnd))
+                    const currentDate = new Date(Math.max(leaveStartDate.getTime(), monthStart.getTime()))
+                    const endDate = new Date(Math.min(leaveEndDate.getTime(), monthEnd.getTime()))
                     
                     while (currentDate <= endDate) {
                       const dayOfWeek = currentDate.getDay()
@@ -579,8 +579,8 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                       
                       // Calculer les jours ouvrés de ce congé dans ce mois
                       let workingDaysInMonth = 0
-                      const currentDate = new Date(Math.max(leaveStartDate, monthStart))
-                      const endDate = new Date(Math.min(leaveEndDate, monthEnd))
+                      const currentDate = new Date(Math.max(leaveStartDate.getTime(), monthStart.getTime()))
+                      const endDate = new Date(Math.min(leaveEndDate.getTime(), monthEnd.getTime()))
                       
                       while (currentDate <= endDate) {
                         const dayOfWeek = currentDate.getDay()
@@ -615,8 +615,8 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                       }
                       
                       let workingDaysInMonth = 0
-                      const currentDate = new Date(Math.max(leaveStartDate, monthStart))
-                      const endDate = new Date(Math.min(leaveEndDate, monthEnd))
+                      const currentDate = new Date(Math.max(leaveStartDate.getTime(), monthStart.getTime()))
+                      const endDate = new Date(Math.min(leaveEndDate.getTime(), monthEnd.getTime()))
                       
                       while (currentDate <= endDate) {
                         const dayOfWeek = currentDate.getDay()
