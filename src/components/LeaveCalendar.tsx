@@ -362,6 +362,21 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
     return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
   };
 
+  // Fonction pour récupérer les données de feuille de paie depuis localStorage
+  const getPayrollDataForMonth = (month: number, year: number) => {
+    try {
+      const savedData = localStorage.getItem('payrollDataByMonth');
+      if (savedData) {
+        const payrollDataByMonth = JSON.parse(savedData);
+        const key = `${year}-${month.toString().padStart(2, '0')}`;
+        return payrollDataByMonth[key] || null;
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des données de feuille de paie:', error);
+    }
+    return null;
+  };
+
   return (
     <div className="card">
       <div className="card-header">
@@ -755,6 +770,71 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                                 <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-green-700 dark:text-green-400">{cpRemaining.toFixed(1)}</td>
                                 <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-green-700 dark:text-green-400">{cetRemaining}</td>
                               </tr>
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Tableau de validation des données de feuille de paie */}
+                        <div className="mt-3">
+                          <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Validation Feuille de Paie
+                          </div>
+                          <table className="w-full text-xs border-collapse border border-gray-200 dark:border-gray-700">
+                            <tbody>
+                              {(() => {
+                                const payrollData = getPayrollDataForMonth(month + 1, year);
+                                const monthName = monthNames[month];
+                                
+                                // Calculer les CP pris du mois précédent
+                                const cpPrisCount = payrollData?.cpPrisMoisPrecedent?.length || 0;
+                                // Calculer les CET pris du mois précédent  
+                                const cetPrisCount = payrollData?.cetPrisMoisPrecedent?.length || 0;
+                                
+                                return (
+                                  <>
+                                    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">
+                                        Reliquat CP
+                                      </td>
+                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-center font-semibold text-blue-800 dark:text-blue-400">
+                                        {payrollData?.cpReliquat || '-'}
+                                      </td>
+                                    </tr>
+                                    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">
+                                        RTT Pris
+                                      </td>
+                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-center font-semibold text-red-700 dark:text-red-400">
+                                        {payrollData?.rttPrisDansMois || '-'}
+                                      </td>
+                                    </tr>
+                                    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">
+                                        CP Pris
+                                      </td>
+                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-center font-semibold text-blue-800 dark:text-blue-400">
+                                        {cpPrisCount > 0 ? cpPrisCount : '-'}
+                                      </td>
+                                    </tr>
+                                    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">
+                                        CET Pris
+                                      </td>
+                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-center font-semibold text-blue-600 dark:text-blue-400">
+                                        {cetPrisCount > 0 ? cetPrisCount : '-'}
+                                      </td>
+                                    </tr>
+                                    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">
+                                        Solde CET
+                                      </td>
+                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-center font-semibold text-blue-600 dark:text-blue-400">
+                                        {payrollData?.soldeCet || '-'}
+                                      </td>
+                                    </tr>
+                                  </>
+                                );
+                              })()}
                             </tbody>
                           </table>
                         </div>
