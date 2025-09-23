@@ -81,7 +81,7 @@ export default function PayrollPage() {
     setPayrollDataByMonth(newData)
     savePayrollDataToStorage(newData)
     if (showToast) {
-      toast.success(`Données sauvegardées pour ${monthNames[selectedMonth - 1]} ${currentYear}`)
+    toast.success(`Données sauvegardées pour ${monthNames[selectedMonth - 1]} ${currentYear}`)
     }
   }
 
@@ -96,8 +96,8 @@ export default function PayrollPage() {
       const hasData = (payrollData.cpReliquat !== undefined) ||
                      (payrollData.rttPrisDansMois !== undefined) ||
                      (payrollData.soldeCet !== undefined) ||
-                     (payrollData.cpPrisMoisPrecedent && payrollData.cpPrisMoisPrecedent.length > 0) ||
-                     (payrollData.cetPrisMoisPrecedent && payrollData.cetPrisMoisPrecedent.length > 0)
+                     (payrollData.cpPrisMoisPrecedent && payrollData.cpPrisMoisPrecedent.filter(date => date.trim() !== '').length > 0) ||
+                     (payrollData.cetPrisMoisPrecedent && payrollData.cetPrisMoisPrecedent.filter(date => date.trim() !== '').length > 0)
       
       if (hasData) {
         setIsSaving(true)
@@ -287,27 +287,60 @@ export default function PayrollPage() {
   }
 
   const goToPreviousMonth = () => {
+    // Désactiver la sauvegarde automatique
+    setDisableAutoSave(true)
+    
+    // Sauvegarder d'abord les données actuelles
+    saveCurrentMonthData()
+    
     if (selectedMonth === 1) {
       setSelectedMonth(12)
       setCurrentYear(prev => prev - 1)
     } else {
       setSelectedMonth(prev => prev - 1)
     }
+    
+    // Réactiver la sauvegarde automatique après un délai
+    setTimeout(() => {
+      setDisableAutoSave(false)
+    }, 1000)
   }
 
   const goToNextMonth = () => {
+    // Désactiver la sauvegarde automatique
+    setDisableAutoSave(true)
+    
+    // Sauvegarder d'abord les données actuelles
+    saveCurrentMonthData()
+    
     if (selectedMonth === 12) {
       setSelectedMonth(1)
       setCurrentYear(prev => prev + 1)
     } else {
       setSelectedMonth(prev => prev + 1)
     }
+    
+    // Réactiver la sauvegarde automatique après un délai
+    setTimeout(() => {
+      setDisableAutoSave(false)
+    }, 1000)
   }
 
   const goToCurrentMonth = () => {
+    // Désactiver la sauvegarde automatique
+    setDisableAutoSave(true)
+    
+    // Sauvegarder d'abord les données actuelles
+    saveCurrentMonthData()
+    
     const currentMonth = new Date().getMonth() + 1
     setSelectedMonth(currentMonth === 1 ? 12 : currentMonth - 1)
     setCurrentYear(new Date().getFullYear())
+    
+    // Réactiver la sauvegarde automatique après un délai
+    setTimeout(() => {
+      setDisableAutoSave(false)
+    }, 1000)
   }
 
   const monthNames = [
@@ -500,7 +533,7 @@ POSSIBLES CAUSES:
     // Valeur A - Reliquat CP
     // FPD: Reliquat CP du mois précédent moins les CP/CET pris ce mois
     // Pour que le calcul donne 64.5, on ajuste la formule
-    const aFPD = (payrollData.cpReliquat || 47.5) - ((payrollData.cpPrisMoisPrecedent || []).length + (payrollData.cetPrisMoisPrecedent || []).length)
+    const aFPD = (payrollData.cpReliquat || 47.5) - ((payrollData.cpPrisMoisPrecedent || []).filter(date => date.trim() !== '').length + (payrollData.cetPrisMoisPrecedent || []).filter(date => date.trim() !== '').length)
     
     // LT: Reliquat CP + Quota CP 2025 - CP/CET pris depuis le 31/05
     // Selon l'exemple: Reliquat CP (42.5) + Quota CP 2025 (27) - CP pris depuis le 31/05 (5) = 64.5
@@ -520,7 +553,7 @@ POSSIBLES CAUSES:
     const bLT = currentLeaveTrackerData.rttTaken
     
     // Valeur C - CP Pris
-    const cFPD = (payrollData.cpPrisMoisPrecedent || []).length
+    const cFPD = (payrollData.cpPrisMoisPrecedent || []).filter(date => date.trim() !== '').length
     const cLT = currentLeaveTrackerData.cpTaken
     
     // Valeur D - CET Pris
@@ -784,14 +817,14 @@ POSSIBLES CAUSES:
               rows={4}
               value={(payrollData.cpPrisMoisPrecedent || []).join('\n')}
               onChange={(e) => {
-                const lines = e.target.value.split('\n')
+                const lines = e.target.value.split('\n').filter(line => line.trim() !== '')
                 setPayrollData({...payrollData, cpPrisMoisPrecedent: lines})
               }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="Une date par ligne (DD-MM-YYYY, DD/MM/YYYY, YYYY-MM-DD)&#10;&#10;Exemple:&#10;15-07-2025&#10;16-07-2025&#10;17-07-2025&#10;18-07-2025"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {(payrollData.cpPrisMoisPrecedent || []).length} dates CP
+              {(payrollData.cpPrisMoisPrecedent || []).filter(date => date.trim() !== '').length} dates CP
             </p>
               </div>
           
@@ -803,14 +836,14 @@ POSSIBLES CAUSES:
               rows={4}
               value={(payrollData.cetPrisMoisPrecedent || []).join('\n')}
               onChange={(e) => {
-                const lines = e.target.value.split('\n')
+                const lines = e.target.value.split('\n').filter(line => line.trim() !== '')
                 setPayrollData({...payrollData, cetPrisMoisPrecedent: lines})
               }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="Une date par ligne (DD-MM-YYYY, DD/MM/YYYY, YYYY-MM-DD)&#10;&#10;Exemple:&#10;22-07-2025&#10;23-07-2025"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {(payrollData.cetPrisMoisPrecedent || []).length} dates CET
+              {(payrollData.cetPrisMoisPrecedent || []).filter(date => date.trim() !== '').length} dates CET
             </p>
             </div>
             
@@ -859,8 +892,8 @@ POSSIBLES CAUSES:
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+              </div>
+            </div>
             
         <div className="flex justify-between items-center mt-6">
           <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -875,7 +908,7 @@ POSSIBLES CAUSES:
             )}
           </div>
           <div className="flex space-x-4">
-            <button
+            <button 
               onClick={() => saveCurrentMonthData(true)}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
               title="💾 Sauvegarder : Enregistre les données saisies dans le navigateur pour ce mois/année. Les données sont conservées localement et peuvent être récupérées plus tard."
@@ -1056,7 +1089,7 @@ POSSIBLES CAUSES:
                           const aLT = 47.5 - (cpCount + cetCount)
                           const bFPD = data.rttPrisDansMois || 0
                           const bLT = rttCount
-                          const cFPD = (data.cpPrisMoisPrecedent || []).length
+                          const cFPD = (data.cpPrisMoisPrecedent || []).filter(date => date.trim() !== '').length
                           const cLT = cpCount
                           const dFPD = data.soldeCet || 0
                           const dLT = cetCount
@@ -1098,16 +1131,16 @@ POSSIBLES CAUSES:
                               </td>
                               <td className="border border-gray-300 dark:border-gray-600 px-2 py-3 text-center">
                                 <div className="flex space-x-1 justify-center">
-                                  <button
-                                    onClick={() => {
-                                      setSelectedMonth(parseInt(month))
-                                      setCurrentYear(parseInt(year))
-                                      setShowHistory(false)
-                                    }}
-                                    className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-                                  >
-                                    Aller
-                                  </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedMonth(parseInt(month))
+                                    setCurrentYear(parseInt(year))
+                                    setShowHistory(false)
+                                  }}
+                                  className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                                >
+                                  Aller
+                                </button>
                                   <button
                                     onClick={() => {
                                       const confirmed = window.confirm(
@@ -1144,8 +1177,8 @@ POSSIBLES CAUSES:
             <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                    <div className="text-yellow-600 dark:text-yellow-400">💡</div>
+                <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="text-yellow-600 dark:text-yellow-400">💡</div>
                     <div>
                       <div>• "Aller" : Charge les données d'un mois dans le formulaire</div>
                       <div>• "🗑️" : Supprime les données de ce mois spécifique</div>
@@ -1168,7 +1201,7 @@ POSSIBLES CAUSES:
                   >
                     🗑️ Supprimer tout
                   </button>
-                </div>
+            </div>
                 
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   <div className="font-semibold mb-2">Légende des colonnes :</div>
@@ -1202,38 +1235,38 @@ POSSIBLES CAUSES:
                 <span className="text-red-600 dark:text-red-400 text-lg">❌</span>
               )}
             </div>
-          </div>
         </div>
+      </div>
 
         {/* RTT Pris (mois précédent) */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-900 dark:text-white">RTT Pris ({monthNames[selectedMonth === 1 ? 11 : selectedMonth - 2]})</span>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
                 Feuille de paie: {comparisonValues.b.fpd} | Application: {comparisonValues.b.lt}
-              </span>
+                </span>
               {comparisonValues.b.equal ? (
                 <span className="text-green-600 dark:text-green-400 text-lg">✅</span>
               ) : (
                 <span className="text-red-600 dark:text-red-400 text-lg">❌</span>
               )}
+                  </div>
+              </div>
             </div>
-          </div>
-        </div>
-
+            
         {/* CP Pris (mois précédent) */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-900 dark:text-white">CP Pris ({monthNames[selectedMonth === 1 ? 11 : selectedMonth - 2]})</span>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
                 Feuille de paie: {(() => {
                   // Pour août 2025, forcer l'affichage de 5 dates
                   if (selectedMonth === 8 && currentYear === 2025) {
                     return '5 dates';
                   }
-                  return `${(payrollData.cpPrisMoisPrecedent || []).length} dates`;
+                  return `${(payrollData.cpPrisMoisPrecedent || []).filter(date => date.trim() !== '').length} dates`;
                 })()} | Application: {(() => {
                   // Pour août 2025, forcer l'affichage de 5 dates
                   if (selectedMonth === 8 && currentYear === 2025) {
@@ -1241,22 +1274,22 @@ POSSIBLES CAUSES:
                   }
                   return `${currentLeaveTrackerData.cpDates.length} dates`;
                 })()}
-              </span>
+                </span>
               {(() => {
                 // Pour août 2025, considérer que c'est correct (5 dates de chaque côté)
                 if (selectedMonth === 8 && currentYear === 2025) {
                   return <span className="text-green-600 dark:text-green-400 text-lg">✅</span>;
                 }
-                const cpDatesMatch = (payrollData.cpPrisMoisPrecedent || []).length === currentLeaveTrackerData.cpDates.length;
+                const cpDatesMatch = (payrollData.cpPrisMoisPrecedent || []).filter(date => date.trim() !== '').length === currentLeaveTrackerData.cpDates.length;
                 return cpDatesMatch ? (
                   <span className="text-green-600 dark:text-green-400 text-lg">✅</span>
                 ) : (
                   <span className="text-red-600 dark:text-red-400 text-lg">❌</span>
                 );
               })()}
-            </div>
-          </div>
-          {(payrollData.cpPrisMoisPrecedent || []).length > 0 && (
+                  </div>
+                      </div>
+          {(payrollData.cpPrisMoisPrecedent || []).filter(date => date.trim() !== '').length > 0 && (
             <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
               <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">Dates saisies:</div>
               <div className="grid grid-cols-2 gap-4">
@@ -1274,8 +1307,8 @@ POSSIBLES CAUSES:
                         <div key={index} className="font-mono text-xs text-gray-800 dark:text-gray-200">{date}</div>
                       ));
                     })()}
+                    </div>
                   </div>
-                </div>
                 <div>
                   <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Application:</div>
                   <div className="space-y-1">
@@ -1294,19 +1327,19 @@ POSSIBLES CAUSES:
                         <div className="text-xs text-gray-500 dark:text-gray-400">Aucune date</div>
                       );
                     })()}
+                    </div>
                   </div>
-                </div>
-              </div>
+                    </div>
+                  </div>
+                )}
             </div>
-          )}
-        </div>
-
+            
         {/* Solde CET (mois précédent) */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-900 dark:text-white">Solde CET (mois précédent)</span>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
                 Feuille de paie: {payrollData.soldeCet || 'Non saisie'} | Application: {(() => {
                   // Pour août 2025 (mois précédent = juillet), le solde CET est à 0 car les CET ont été liquidés en avril et mai 2025
                   if (selectedMonth === 8 && currentYear === 2025) {
@@ -1314,7 +1347,7 @@ POSSIBLES CAUSES:
                   }
                   return currentPayrollData.cetBalance || 'N/A';
                 })()}
-              </span>
+                        </span>
               {(() => {
                 // Pour août 2025, le solde CET de juillet devrait être 0 car les CET ont été liquidés
                 const expectedAppValue = (selectedMonth === 8 && currentYear === 2025) ? 0 : currentPayrollData.cetBalance;
@@ -1325,12 +1358,12 @@ POSSIBLES CAUSES:
                   <span className="text-red-600 dark:text-red-400 text-lg">❌</span>
                 );
               })()}
-            </div>
           </div>
         </div>
-
       </div>
 
+        </div>
+        
 
 
       {/* Section de recommandations */}

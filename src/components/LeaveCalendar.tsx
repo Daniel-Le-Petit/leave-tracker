@@ -505,7 +505,49 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                     const currentDate = new Date(Math.max(leaveStartDate.getTime(), monthStart.getTime()))
                     const endDate = new Date(Math.min(leaveEndDate.getTime(), monthEnd.getTime()))
                     
-                    while (currentDate <= endDate) {
+                    // Debug pour RTT 30-31 décembre 2024
+                    if (year === 2024 && month === 11 && leave.startDate.includes('2024-12-30')) {
+                      console.log('Debug boucle 30-31 décembre 2024:', {
+                        leaveStartDate: leaveStartDate.toDateString(),
+                        leaveEndDate: leaveEndDate.toDateString(),
+                        monthStart: monthStart.toDateString(),
+                        monthEnd: monthEnd.toDateString(),
+                        currentDate: currentDate.toDateString(),
+                        endDate: endDate.toDateString(),
+                        condition: currentDate <= endDate
+                      })
+                    }
+                    
+                    // Traiter tous les jours de la période (inclusif) - approche différente
+                    const startTime = Math.max(leaveStartDate.getTime(), monthStart.getTime())
+                    // Utiliser la fin de journée pour endTime (23:59:59.999)
+                    const leaveEndTime = new Date(leaveEndDate.getFullYear(), leaveEndDate.getMonth(), leaveEndDate.getDate(), 23, 59, 59, 999).getTime()
+                    const monthEndTime = new Date(monthEnd.getFullYear(), monthEnd.getMonth(), monthEnd.getDate(), 23, 59, 59, 999).getTime()
+                    const endTime = Math.min(leaveEndTime, monthEndTime)
+                    
+                    // Debug pour RTT 30-31 décembre 2024
+                    if (year === 2024 && month === 11 && leave.startDate.includes('2024-12-30')) {
+                      console.log('Debug nouvelle approche 30-31 décembre 2024:', {
+                        leaveStartDate: leaveStartDate.toDateString(),
+                        leaveEndDate: leaveEndDate.toDateString(),
+                        monthStart: monthStart.toDateString(),
+                        monthEnd: monthEnd.toDateString(),
+                        startTime: new Date(startTime).toDateString(),
+                        endTime: new Date(endTime).toDateString(),
+                        startTimeMs: startTime,
+                        endTimeMs: endTime,
+                        leaveEndTimeMs: leaveEndDate.getTime(),
+                        monthEndTimeMs: monthEnd.getTime(),
+                        difference: endTime - startTime,
+                        daysDifference: (endTime - startTime) / (24 * 60 * 60 * 1000)
+                      })
+                    }
+                    
+                    // Boucle jour par jour
+                    let iterationCount = 0
+                    for (let dayTime = startTime; dayTime <= endTime; dayTime += 24 * 60 * 60 * 1000) {
+                      iterationCount++
+                      const currentDate = new Date(dayTime)
                       const dayOfWeek = currentDate.getDay()
                       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
                       
@@ -513,25 +555,34 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                         new Date(holiday.date).toDateString() === currentDate.toDateString()
                       )
                       
-                      // Debug pour le 1er janvier 2026
-                      if (currentDate.toDateString() === 'Thu Jan 01 2026') {
-                        console.log('Debug 1er janvier 2026 (map):', {
+                      // Debug pour RTT 30-31 décembre 2024
+                      if (year === 2024 && month === 11 && leave.startDate.includes('2024-12-30')) {
+                        console.log(`Debug calcul jours ouvrés 30-31 décembre 2024 (itération ${iterationCount}):`, {
                           date: currentDate.toDateString(),
+                          dayTime,
                           dayOfWeek,
                           isWeekend,
                           isHoliday,
                           allHolidays: allHolidays.map(h => ({ date: h.date, name: h.name })),
-                          matchingHoliday: allHolidays.find(h => 
-                            new Date(h.date).toDateString() === currentDate.toDateString()
-                          )
+                          leaveStart: leave.startDate,
+                          leaveEnd: leave.endDate,
+                          workingDaysInMonth
                         })
                       }
                       
                       if (!isWeekend && !isHoliday) {
                         workingDaysInMonth++
                       }
-                      
-                      currentDate.setDate(currentDate.getDate() + 1)
+                    }
+                    
+                    // Debug final pour RTT 30-31 décembre 2024
+                    if (year === 2024 && month === 11 && leave.startDate.includes('2024-12-30')) {
+                      console.log('Debug final 30-31 décembre 2024:', {
+                        iterationCount,
+                        workingDaysInMonth,
+                        startTime,
+                        endTime
+                      })
                     }
                     
                     return {
@@ -542,7 +593,33 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
 
                   const rttTaken = monthLeaves
                     .filter(leave => leave.type === 'rtt')
-                    .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
+                    .reduce((sum, leave) => {
+                      // Debug pour décembre 2024 RTT
+                      if (year === 2024 && month === 11 && leave.startDate.includes('2024-12-30')) {
+                        console.log('Debug RTT 30-31 décembre 2024:', {
+                          leaveId: leave.id,
+                          startDate: leave.startDate,
+                          endDate: leave.endDate,
+                          workingDays: leave.workingDays,
+                          workingDaysInMonth: leave.workingDaysInMonth,
+                          type: leave.type
+                        })
+                      }
+                      
+                      // Debug pour janvier 2025 RTT
+                      if (year === 2025 && month === 0) {
+                        console.log('Debug RTT janvier 2025:', {
+                          leaveId: leave.id,
+                          startDate: leave.startDate,
+                          endDate: leave.endDate,
+                          workingDays: leave.workingDays,
+                          workingDaysInMonth: leave.workingDaysInMonth,
+                          type: leave.type
+                        })
+                      }
+                      
+                      return sum + leave.workingDaysInMonth
+                    }, 0)
                   
                   const cpTaken = monthLeaves
                     .filter(leave => leave.type === 'cp')
@@ -615,10 +692,15 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                       }
                       
                       let workingDaysInMonth = 0
-                      const currentDate = new Date(Math.max(leaveStartDate.getTime(), monthStart.getTime()))
-                      const endDate = new Date(Math.min(leaveEndDate.getTime(), monthEnd.getTime()))
+                      const startTime = Math.max(leaveStartDate.getTime(), monthStart.getTime())
+                      // Utiliser la fin de journée pour endTime (23:59:59.999)
+                      const leaveEndTime = new Date(leaveEndDate.getFullYear(), leaveEndDate.getMonth(), leaveEndDate.getDate(), 23, 59, 59, 999).getTime()
+                      const monthEndTime = new Date(monthEnd.getFullYear(), monthEnd.getMonth(), monthEnd.getDate(), 23, 59, 59, 999).getTime()
+                      const endTime = Math.min(leaveEndTime, monthEndTime)
                       
-                      while (currentDate <= endDate) {
+                      // Boucle jour par jour
+                      for (let dayTime = startTime; dayTime < endTime; dayTime += 24 * 60 * 60 * 1000) {
+                        const currentDate = new Date(dayTime)
                         const dayOfWeek = currentDate.getDay()
                         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
                         
@@ -629,8 +711,6 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                         if (!isWeekend && !isHoliday) {
                           workingDaysInMonth++
                         }
-                        
-                        currentDate.setDate(currentDate.getDate() + 1)
                       }
                       
                       return {
@@ -739,109 +819,10 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                           {monthNames[month]} {year}
                         </h3>
-                        
-                        {/* Tableau des totaux du mois */}
-                        <div className="mt-2">
-                          <table className="w-full text-xs border-collapse border border-gray-200 dark:border-gray-700">
-                            <thead>
-                              <tr className="bg-gray-100 dark:bg-gray-800">
-                                <th className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-left font-semibold text-gray-700 dark:text-gray-300"></th>
-                                <th className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-white bg-red-500">RTT</th>
-                                <th className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-white bg-blue-800">CP</th>
-                                <th className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-white bg-blue-400">CET</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">Pris en {monthNames[month]}</td>
-                                <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-red-700 dark:text-red-400">{rttTaken}</td>
-                                <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-blue-800 dark:text-blue-400">{cpTaken}</td>
-                                <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-blue-600 dark:text-blue-400">{cetTaken}</td>
-                              </tr>
-                              <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">Pris Cumulé</td>
-                                <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-red-700 dark:text-red-400">{cumulativeRTT}</td>
-                                <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-blue-800 dark:text-blue-400">{cumulativeCP}</td>
-                                <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-blue-600 dark:text-blue-400">{cumulativeCET}</td>
-                              </tr>
-                              <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">Restant</td>
-                                <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-green-700 dark:text-green-400">{rttRemaining}</td>
-                                <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-green-700 dark:text-green-400">{cpRemaining.toFixed(1)}</td>
-                                <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-green-700 dark:text-green-400">{cetRemaining}</td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-
-                        {/* Tableau de validation des données de feuille de paie */}
-                        <div className="mt-3">
-                          <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            Validation Feuille de Paie
-                          </div>
-                          <table className="w-full text-xs border-collapse border border-gray-200 dark:border-gray-700">
-                            <tbody>
-                              {(() => {
-                                const payrollData = getPayrollDataForMonth(month + 1, year);
-                                const monthName = monthNames[month];
-                                
-                                // Calculer les CP pris du mois précédent
-                                const cpPrisCount = payrollData?.cpPrisMoisPrecedent?.length || 0;
-                                // Calculer les CET pris du mois précédent  
-                                const cetPrisCount = payrollData?.cetPrisMoisPrecedent?.length || 0;
-                                
-                                return (
-                                  <>
-                                    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">
-                                        Reliquat CP
-                                      </td>
-                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-center font-semibold text-blue-800 dark:text-blue-400">
-                                        {payrollData?.cpReliquat || '-'}
-                                      </td>
-                                    </tr>
-                                    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">
-                                        RTT Pris
-                                      </td>
-                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-center font-semibold text-red-700 dark:text-red-400">
-                                        {payrollData?.rttPrisDansMois || '-'}
-                                      </td>
-                                    </tr>
-                                    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">
-                                        CP Pris
-                                      </td>
-                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-center font-semibold text-blue-800 dark:text-blue-400">
-                                        {cpPrisCount > 0 ? cpPrisCount : '-'}
-                                      </td>
-                                    </tr>
-                                    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">
-                                        CET Pris
-                                      </td>
-                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-center font-semibold text-blue-600 dark:text-blue-400">
-                                        {cetPrisCount > 0 ? cetPrisCount : '-'}
-                                      </td>
-                                    </tr>
-                                    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">
-                                        Solde CET
-                                      </td>
-                                      <td className="border border-gray-200 dark:border-gray-700 px-2 py-1 text-center font-semibold text-blue-600 dark:text-blue-400">
-                                        {payrollData?.soldeCet || '-'}
-                                      </td>
-                                    </tr>
-                                  </>
-                                );
-                              })()}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
+            </div>
+            
                       {/* Grille du mois */}
-                      <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-1">
                         {Array.from({ length: 35 }, (_, dayIndex) => {
                           const firstDayOfMonth = new Date(year, month, 1)
                           const startDate = new Date(firstDayOfMonth)
@@ -893,9 +874,9 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                             <div
                               key={dayIndex}
                               onClick={handleDayClick}
-                              className={`
+                  className={`
                                 min-h-[40px] p-1 border border-gray-200 dark:border-gray-700 rounded cursor-pointer
-                                transition-all duration-200 hover:shadow-md hover:scale-105
+                    transition-all duration-200 hover:shadow-md hover:scale-105
                                 ${isToday ? 'ring-2 ring-blue-500' : ''}
                                 ${isWeekend ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''}
                                 ${holiday && !isWeekend ? 'bg-yellow-100 dark:bg-yellow-900/20' : ''}
@@ -908,12 +889,12 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                                   isCurrentMonth ? 'text-gray-900 dark:text-white' : 'text-gray-400'
                                 }`}>
                                   {date.getDate()}
-                                </span>
+                    </span>
                                 {holiday && (
                                   <Gift className="h-2 w-2 text-yellow-600" />
-                                )}
-                              </div>
-                              
+                    )}
+                  </div>
+                  
                               {holiday && (
                                 <div className="text-xs text-yellow-800 dark:text-yellow-200 font-medium truncate">
                                   {holiday.name}
@@ -924,30 +905,613 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                                 <div className={`text-xs p-1 rounded ${getLeaveColor(leave)} flex items-center justify-between`}>
                                   <span className="truncate">{leave.type.toUpperCase()}</span>
                                   {leave.isForecast && (
-                                    <span className="text-xs opacity-75">(P)</span>
-                                  )}
-                                </div>
-                              )}
-                              
-                              {/* Indicateur d'ajout pour les jours vides */}
+                        <span className="text-xs opacity-75">(P)</span>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Indicateur d'ajout pour les jours vides */}
                               {!leave && !holiday && isCurrentMonth && !isWeekend && (
                                 <div className="flex items-center justify-center h-4">
                                   <Plus className="h-2 w-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </div>
-                              )}
-                              
+                    </div>
+                  )}
+                  
                               {daySuggestions && daySuggestions.length > 0 && (
-                                <div className="space-y-1">
+                    <div className="space-y-1">
                                   {daySuggestions.slice(0, 1).map((suggestion, idx) => (
                                     <div key={idx} className={`text-xs p-1 rounded ${getSuggestionColor(suggestion.reason)}`}>
                                       {suggestion.reason}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                             </div>
                           )
                         })}
+                      </div>
+
+                      {/* Tableaux sous le calendrier */}
+                      <div className="mt-4 space-y-3">
+                        {/* Tableau des totaux du mois */}
+                        {(() => {
+                          // Calculer les valeurs du mois suivant pour validation
+                          const nextMonth = month === 11 ? 0 : month + 1;
+                          const nextYear = month === 11 ? year + 1 : year;
+                          
+                          // Récupérer les données de feuille de paie du mois suivant
+                          const nextMonthPayrollData = getPayrollDataForMonth(nextMonth + 1, nextYear);
+                          
+                          // Calculer les valeurs du mois suivant pour validation
+                          let nextMonthRttPris = 0;
+                          let nextMonthCpPris = 0;
+                          let nextMonthCetPris = 0;
+                          let nextMonthCpSolde = 0;
+                          let nextMonthCetSolde = 0;
+                          
+                          if (nextMonthPayrollData) {
+                            nextMonthRttPris = nextMonthPayrollData.rttPrisDansMois || 0;
+                            nextMonthCpPris = nextMonthPayrollData.cpPrisMoisPrecedent?.filter(date => date.trim() !== '').length || 0;
+                            nextMonthCetPris = nextMonthPayrollData.cetPrisMoisPrecedent?.filter(date => date.trim() !== '').length || 0;
+                            nextMonthCpSolde = nextMonthPayrollData.cpReliquat || 0;
+                            nextMonthCetSolde = nextMonthPayrollData.soldeCet || 0;
+                            
+                            // Debug: Afficher les dates CP saisies pour ce mois
+                            if (nextMonthPayrollData.cpPrisMoisPrecedent && nextMonthPayrollData.cpPrisMoisPrecedent.length > 0) {
+                              console.log(`🔍 Debug CP ${monthNames[nextMonth]} ${nextYear}:`, nextMonthPayrollData.cpPrisMoisPrecedent);
+                            }
+                          }
+                          
+                          // Vérifier les correspondances pour les couleurs du tableau mensuel
+                          const prisRttMatch = rttTaken === nextMonthRttPris;
+                          const prisCpMatch = cpTaken === nextMonthCpPris;
+                          const prisCetMatch = cetTaken === nextMonthCetPris;
+                          const restantCpMatch = cpRemaining.toFixed(1) === nextMonthCpSolde.toFixed(1);
+                          const restantCetMatch = cetRemaining === nextMonthCetSolde;
+                          
+                          return (
+                            <table className="w-full text-xs border-collapse border border-gray-200 dark:border-gray-700">
+                          <thead>
+                            <tr className="bg-gray-100 dark:bg-gray-800">
+                              <th className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-left font-semibold text-gray-700 dark:text-gray-300 w-24"></th>
+                              <th className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-white bg-red-500 w-12">RTT</th>
+                              <th className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-white bg-blue-800 w-12">CP</th>
+                              <th className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-white bg-blue-400 w-12">CET</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                              <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">Pris en {monthNames[month]}</td>
+                              <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${prisRttMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>{rttTaken}</td>
+                              <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${prisCpMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>{cpTaken}</td>
+                              <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${prisCetMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>{cetTaken}</td>
+                            </tr>
+                            <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                              <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">Restant</td>
+                              <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-green-700 dark:text-green-400">{rttRemaining}</td>
+                              <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${restantCpMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>{cpRemaining.toFixed(1)}</td>
+                              <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${restantCetMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>{cetRemaining}</td>
+                            </tr>
+                            <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                              <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">Pris Cumulé</td>
+                              <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-gray-900 dark:text-white">{cumulativeRTT}</td>
+                              <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-gray-900 dark:text-white">{cumulativeCP}</td>
+                              <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-gray-900 dark:text-white">{cumulativeCET}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                          );
+                        })()}
+
+                        {/* Tableau de validation des données de feuille de paie */}
+                        <div>
+                          <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Validation Feuille de Paie
+                    </div>
+                          <table className="w-full text-xs border-collapse border border-gray-200 dark:border-gray-700">
+                            <tbody>
+                              {(() => {
+                                const payrollData = getPayrollDataForMonth(month + 1, year);
+                                
+                                // Calculer les CP pris du mois précédent
+                                const cpPrisCount = payrollData?.cpPrisMoisPrecedent?.filter(date => date.trim() !== '').length || 0;
+                                // Calculer les CET pris du mois précédent  
+                                const cetPrisCount = payrollData?.cetPrisMoisPrecedent?.filter(date => date.trim() !== '').length || 0;
+                                
+                                // Valeurs par défaut si pas de données
+                                const rttSolde = payrollData?.rttPrisDansMois || 0; // RTT pris = solde pour le mois précédent
+                                const cpSolde = payrollData?.cpReliquat || 0;
+                                const cetSolde = payrollData?.soldeCet || 0;
+                                
+                                const rttPris = payrollData?.rttPrisDansMois || 0;
+                                const cpPris = cpPrisCount;
+                                const cetPris = cetPrisCount;
+
+                                // Calculer les valeurs du mois précédent pour validation
+                                const prevMonth = month === 0 ? 11 : month - 1;
+                                const prevYear = month === 0 ? year - 1 : year;
+                                
+                                // Récupérer les données du mois précédent
+                                const prevMonthLeaves = leaves.filter(leave => {
+                                  const leaveStartDate = new Date(leave.startDate)
+                                  const leaveEndDate = new Date(leave.endDate)
+                                  
+                                  // Vérifier si le congé traverse le mois précédent
+                                  const monthStart = new Date(prevYear, prevMonth, 1)
+                                  const monthEnd = new Date(prevYear, prevMonth + 1, 0)
+                                  
+                                  if (leaveStartDate > monthEnd || leaveEndDate < monthStart) return false
+                                  
+                                  // Obtenir tous les jours fériés pour la période du congé
+                                  const allHolidays = []
+                                  const startYear = Math.min(leaveStartDate.getFullYear(), prevYear)
+                                  const endYear = Math.max(leaveEndDate.getFullYear(), prevYear)
+                                  
+                                  for (let y = startYear; y <= endYear; y++) {
+                                    allHolidays.push(...getHolidaysForYear(y))
+                                  }
+                                  
+                                  // Calculer les jours ouvrés de ce congé dans le mois précédent
+                                  let workingDaysInMonth = 0
+                                  const currentDate = new Date(Math.max(leaveStartDate.getTime(), monthStart.getTime()))
+                                  const endDate = new Date(Math.min(leaveEndDate.getTime(), monthEnd.getTime()))
+                                  
+                                  while (currentDate <= endDate) {
+                                    const dayOfWeek = currentDate.getDay()
+                                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+                                    
+                                    const isHoliday = allHolidays.some(holiday => 
+                                      new Date(holiday.date).toDateString() === currentDate.toDateString()
+                                    )
+                                    
+                                    if (!isWeekend && !isHoliday) {
+                                      workingDaysInMonth++
+                                    }
+                                    
+                                    currentDate.setDate(currentDate.getDate() + 1)
+                                  }
+                                  
+                                  return workingDaysInMonth > 0
+                                }).map(leave => {
+                                  // Recalculer les jours ouvrés pour ce congé dans le mois précédent
+                                  const leaveStartDate = new Date(leave.startDate)
+                                  const leaveEndDate = new Date(leave.endDate)
+                                  const monthStart = new Date(prevYear, prevMonth, 1)
+                                  const monthEnd = new Date(prevYear, prevMonth + 1, 0)
+                                  
+                                  // Obtenir tous les jours fériés pour la période du congé
+                                  const allHolidays = []
+                                  const startYear = Math.min(leaveStartDate.getFullYear(), prevYear)
+                                  const endYear = Math.max(leaveEndDate.getFullYear(), prevYear)
+                                  
+                                  for (let y = startYear; y <= endYear; y++) {
+                                    allHolidays.push(...getHolidaysForYear(y))
+                                  }
+                                  
+                                  let workingDaysInMonth = 0
+                                  const currentDate = new Date(Math.max(leaveStartDate.getTime(), monthStart.getTime()))
+                                  const endDate = new Date(Math.min(leaveEndDate.getTime(), monthEnd.getTime()))
+                                  
+                                  while (currentDate <= endDate) {
+                                    const dayOfWeek = currentDate.getDay()
+                                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+                                    
+                                    const isHoliday = allHolidays.some(holiday => 
+                                      new Date(holiday.date).toDateString() === currentDate.toDateString()
+                                    )
+                                    
+                                    if (!isWeekend && !isHoliday) {
+                                      workingDaysInMonth++
+                                    }
+                                    
+                                    currentDate.setDate(currentDate.getDate() + 1)
+                                  }
+                                  
+                                  return {
+                                    ...leave,
+                                    workingDaysInMonth
+                                  }
+                                })
+
+                                const prevRttTaken = prevMonthLeaves
+                                  .filter(leave => leave.type === 'rtt')
+                                  .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
+                                
+                                const prevCpTaken = prevMonthLeaves
+                                  .filter(leave => leave.type === 'cp')
+                                  .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
+                                
+                                const prevCetTaken = prevMonthLeaves
+                                  .filter(leave => leave.type === 'cet')
+                                  .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
+
+                                // Calculer les restants du mois précédent
+                                let prevRttRemaining, prevCpRemaining, prevCetRemaining
+                                
+                                if (prevYear === 2025) {
+                                  const rttReliquat2024 = 7
+                                  const cpReliquat2024 = 43.5
+                                  const cetReliquat2024 = 5
+                                  const rttQuota2025 = 23
+                                  const cpQuota2025 = 27
+                                  const cetQuota2025 = 0
+
+                                  // Calculer les cumuls jusqu'au mois précédent
+                                  let cumulativeRTT = 0
+                                  let cumulativeCP = 0
+                                  let cumulativeCET = 0
+
+                                  for (let m = 0; m <= prevMonth; m++) {
+                                    const monthLeavesCumul = leaves.filter(leave => {
+                                      const leaveStartDate = new Date(leave.startDate)
+                                      const leaveEndDate = new Date(leave.endDate)
+                                      
+                                      const monthStart = new Date(prevYear, m, 1)
+                                      const monthEnd = new Date(prevYear, m + 1, 0)
+                                      
+                                      if (leaveStartDate > monthEnd || leaveEndDate < monthStart) return false
+                                      
+                                      const allHolidays = []
+                                      const startYear = Math.min(leaveStartDate.getFullYear(), prevYear)
+                                      const endYear = Math.max(leaveEndDate.getFullYear(), prevYear)
+                                      
+                                      for (let y = startYear; y <= endYear; y++) {
+                                        allHolidays.push(...getHolidaysForYear(y))
+                                      }
+                                      
+                                      let workingDaysInMonth = 0
+                                      const currentDate = new Date(Math.max(leaveStartDate.getTime(), monthStart.getTime()))
+                                      const endDate = new Date(Math.min(leaveEndDate.getTime(), monthEnd.getTime()))
+                                      
+                                      while (currentDate <= endDate) {
+                                        const dayOfWeek = currentDate.getDay()
+                                        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+                                        
+                                        const isHoliday = allHolidays.some(holiday => 
+                                          new Date(holiday.date).toDateString() === currentDate.toDateString()
+                                        )
+                                        
+                                        if (!isWeekend && !isHoliday) {
+                                          workingDaysInMonth++
+                                        }
+                                        
+                                        currentDate.setDate(currentDate.getDate() + 1)
+                                      }
+                                      
+                                      return workingDaysInMonth > 0
+                                    }).map(leave => {
+                                      const leaveStartDate = new Date(leave.startDate)
+                                      const leaveEndDate = new Date(leave.endDate)
+                                      const monthStart = new Date(prevYear, m, 1)
+                                      const monthEnd = new Date(prevYear, m + 1, 0)
+                                      
+                                      const allHolidays = []
+                                      const startYear = Math.min(leaveStartDate.getFullYear(), prevYear)
+                                      const endYear = Math.max(leaveEndDate.getFullYear(), prevYear)
+                                      
+                                      for (let y = startYear; y <= endYear; y++) {
+                                        allHolidays.push(...getHolidaysForYear(y))
+                                      }
+                                      
+                                      let workingDaysInMonth = 0
+                                      const currentDate = new Date(Math.max(leaveStartDate.getTime(), monthStart.getTime()))
+                                      const endDate = new Date(Math.min(leaveEndDate.getTime(), monthEnd.getTime()))
+                                      
+                                      while (currentDate <= endDate) {
+                                        const dayOfWeek = currentDate.getDay()
+                                        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+                                        
+                                        const isHoliday = allHolidays.some(holiday => 
+                                          new Date(holiday.date).toDateString() === currentDate.toDateString()
+                                        )
+                                        
+                                        if (!isWeekend && !isHoliday) {
+                                          workingDaysInMonth++
+                                        }
+                                        
+                                        currentDate.setDate(currentDate.getDate() + 1)
+                                      }
+                                      
+                                      return {
+                                        ...leave,
+                                        workingDaysInMonth
+                                      }
+                                    })
+
+                                    cumulativeRTT += monthLeavesCumul
+                                      .filter(leave => leave.type === 'rtt')
+                                      .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
+                                    
+                                    cumulativeCP += monthLeavesCumul
+                                      .filter(leave => leave.type === 'cp')
+                                      .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
+                                    
+                                    cumulativeCET += monthLeavesCumul
+                                      .filter(leave => leave.type === 'cet')
+                                      .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
+                                  }
+
+                                  prevRttRemaining = Math.max(0, rttReliquat2024 + rttQuota2025 - cumulativeRTT)
+                                  if (prevMonth < 4) {
+                                    prevCpRemaining = Math.max(0, cpReliquat2024 - cumulativeCP)
+                                  } else {
+                                    prevCpRemaining = Math.max(0, cpReliquat2024 + cpQuota2025 - cumulativeCP)
+                                  }
+                                  prevCetRemaining = Math.max(0, cetReliquat2024 + cetQuota2025 - cumulativeCET)
+                                } else {
+                                  // Pour les autres années, valeurs par défaut
+                                  prevRttRemaining = 0
+                                  prevCpRemaining = 0
+                                  prevCetRemaining = 0
+                                }
+
+                                // Vérifier les correspondances pour le style vert
+                                const rttPrisMatch = rttPris === prevRttTaken
+                                const cpPrisMatch = cpPris === prevCpTaken
+                                const cetPrisMatch = cetPris === prevCetTaken
+                                
+                                const cpSoldeMatch = cpSolde === prevCpRemaining
+                                const cetSoldeMatch = cetSolde === prevCetRemaining
+
+                                // Comparer avec les valeurs du mois suivant pour la validation
+                                const nextMonth = month === 11 ? 0 : month + 1
+                                const nextYear = month === 11 ? year + 1 : year
+                                
+                                // Récupérer les données du mois suivant pour validation
+                                const nextMonthLeaves = leaves.filter(leave => {
+                                  const leaveStartDate = new Date(leave.startDate)
+                                  const leaveEndDate = new Date(leave.endDate)
+                                  
+                                  const monthStart = new Date(nextYear, nextMonth, 1)
+                                  const monthEnd = new Date(nextYear, nextMonth + 1, 0)
+                                  
+                                  if (leaveStartDate > monthEnd || leaveEndDate < monthStart) return false
+                                  
+                                  const allHolidays = []
+                                  const startYear = Math.min(leaveStartDate.getFullYear(), nextYear)
+                                  const endYear = Math.max(leaveEndDate.getFullYear(), nextYear)
+                                  
+                                  for (let y = startYear; y <= endYear; y++) {
+                                    allHolidays.push(...getHolidaysForYear(y))
+                                  }
+                                  
+                                  let workingDaysInMonth = 0
+                                  const startTime = Math.max(leaveStartDate.getTime(), monthStart.getTime())
+                                  const leaveEndTime = new Date(leaveEndDate.getFullYear(), leaveEndDate.getMonth(), leaveEndDate.getDate(), 23, 59, 59, 999).getTime()
+                                  const monthEndTime = new Date(monthEnd.getFullYear(), monthEnd.getMonth(), monthEnd.getDate(), 23, 59, 59, 999).getTime()
+                                  const endTime = Math.min(leaveEndTime, monthEndTime)
+                                  
+                                  for (let dayTime = startTime; dayTime < endTime; dayTime += 24 * 60 * 60 * 1000) {
+                                    const currentDate = new Date(dayTime)
+                                    const dayOfWeek = currentDate.getDay()
+                                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+                                    
+                                    const isHoliday = allHolidays.some(holiday => 
+                                      new Date(holiday.date).toDateString() === currentDate.toDateString()
+                                    )
+                                    
+                                    if (!isWeekend && !isHoliday) {
+                                      workingDaysInMonth++
+                                    }
+                                  }
+                                  
+                                  return workingDaysInMonth > 0
+                                }).map(leave => {
+                                  const leaveStartDate = new Date(leave.startDate)
+                                  const leaveEndDate = new Date(leave.endDate)
+                                  const monthStart = new Date(nextYear, nextMonth, 1)
+                                  const monthEnd = new Date(nextYear, nextMonth + 1, 0)
+                                  
+                                  const allHolidays = []
+                                  const startYear = Math.min(leaveStartDate.getFullYear(), nextYear)
+                                  const endYear = Math.max(leaveEndDate.getFullYear(), nextYear)
+                                  
+                                  for (let y = startYear; y <= endYear; y++) {
+                                    allHolidays.push(...getHolidaysForYear(y))
+                                  }
+                                  
+                                  let workingDaysInMonth = 0
+                                  const startTime = Math.max(leaveStartDate.getTime(), monthStart.getTime())
+                                  const leaveEndTime = new Date(leaveEndDate.getFullYear(), leaveEndDate.getMonth(), leaveEndDate.getDate(), 23, 59, 59, 999).getTime()
+                                  const monthEndTime = new Date(monthEnd.getFullYear(), monthEnd.getMonth(), monthEnd.getDate(), 23, 59, 59, 999).getTime()
+                                  const endTime = Math.min(leaveEndTime, monthEndTime)
+                                  
+                                  for (let dayTime = startTime; dayTime < endTime; dayTime += 24 * 60 * 60 * 1000) {
+                                    const currentDate = new Date(dayTime)
+                                    const dayOfWeek = currentDate.getDay()
+                                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+                                    
+                                    const isHoliday = allHolidays.some(holiday => 
+                                      new Date(holiday.date).toDateString() === currentDate.toDateString()
+                                    )
+                                    
+                                    if (!isWeekend && !isHoliday) {
+                                      workingDaysInMonth++
+                                    }
+                                  }
+                                  
+                                  return {
+                                    ...leave,
+                                    workingDaysInMonth
+                                  }
+                                })
+
+                                const nextMonthRttTaken = nextMonthLeaves
+                                  .filter(leave => leave.type === 'rtt')
+                                  .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
+                                
+                                const nextMonthCpTaken = nextMonthLeaves
+                                  .filter(leave => leave.type === 'cp')
+                                  .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
+                                
+                                const nextMonthCetTaken = nextMonthLeaves
+                                  .filter(leave => leave.type === 'cet')
+                                  .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
+
+                                // Calculer les restants du mois suivant pour validation
+                                let nextMonthRttRemaining, nextMonthCpRemaining, nextMonthCetRemaining
+                                
+                                if (nextYear === 2025) {
+                                  const rttReliquat2024 = 7
+                                  const cpReliquat2024 = 43.5
+                                  const cetReliquat2024 = 5
+                                  const rttQuota2025 = 23
+                                  const cpQuota2025 = 27
+                                  const cetQuota2025 = 0
+
+                                  let cumulativeRTT = 0
+                                  let cumulativeCP = 0
+                                  let cumulativeCET = 0
+
+                                  for (let m = 0; m <= nextMonth; m++) {
+                                    const monthLeavesCumul = leaves.filter(leave => {
+                                      const leaveStartDate = new Date(leave.startDate)
+                                      const leaveEndDate = new Date(leave.endDate)
+                                      
+                                      const monthStart = new Date(nextYear, m, 1)
+                                      const monthEnd = new Date(nextYear, m + 1, 0)
+                                      
+                                      if (leaveStartDate > monthEnd || leaveEndDate < monthStart) return false
+                                      
+                                      const allHolidays = []
+                                      const startYear = Math.min(leaveStartDate.getFullYear(), nextYear)
+                                      const endYear = Math.max(leaveEndDate.getFullYear(), nextYear)
+                                      
+                                      for (let y = startYear; y <= endYear; y++) {
+                                        allHolidays.push(...getHolidaysForYear(y))
+                                      }
+                                      
+                                      let workingDaysInMonth = 0
+                                      const startTime = Math.max(leaveStartDate.getTime(), monthStart.getTime())
+                                      const leaveEndTime = new Date(leaveEndDate.getFullYear(), leaveEndDate.getMonth(), leaveEndDate.getDate(), 23, 59, 59, 999).getTime()
+                                      const monthEndTime = new Date(monthEnd.getFullYear(), monthEnd.getMonth(), monthEnd.getDate(), 23, 59, 59, 999).getTime()
+                                      const endTime = Math.min(leaveEndTime, monthEndTime)
+                                      
+                                      for (let dayTime = startTime; dayTime < endTime; dayTime += 24 * 60 * 60 * 1000) {
+                                        const currentDate = new Date(dayTime)
+                                        const dayOfWeek = currentDate.getDay()
+                                        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+                                        
+                                        const isHoliday = allHolidays.some(holiday => 
+                                          new Date(holiday.date).toDateString() === currentDate.toDateString()
+                                        )
+                                        
+                                        if (!isWeekend && !isHoliday) {
+                                          workingDaysInMonth++
+                                        }
+                                      }
+                                      
+                                      return workingDaysInMonth > 0
+                                    }).map(leave => {
+                                      const leaveStartDate = new Date(leave.startDate)
+                                      const leaveEndDate = new Date(leave.endDate)
+                                      const monthStart = new Date(nextYear, m, 1)
+                                      const monthEnd = new Date(nextYear, m + 1, 0)
+                                      
+                                      const allHolidays = []
+                                      const startYear = Math.min(leaveStartDate.getFullYear(), nextYear)
+                                      const endYear = Math.max(leaveEndDate.getFullYear(), nextYear)
+                                      
+                                      for (let y = startYear; y <= endYear; y++) {
+                                        allHolidays.push(...getHolidaysForYear(y))
+                                      }
+                                      
+                                      let workingDaysInMonth = 0
+                                      const startTime = Math.max(leaveStartDate.getTime(), monthStart.getTime())
+                                      const leaveEndTime = new Date(leaveEndDate.getFullYear(), leaveEndDate.getMonth(), leaveEndDate.getDate(), 23, 59, 59, 999).getTime()
+                                      const monthEndTime = new Date(monthEnd.getFullYear(), monthEnd.getMonth(), monthEnd.getDate(), 23, 59, 59, 999).getTime()
+                                      const endTime = Math.min(leaveEndTime, monthEndTime)
+                                      
+                                      for (let dayTime = startTime; dayTime < endTime; dayTime += 24 * 60 * 60 * 1000) {
+                                        const currentDate = new Date(dayTime)
+                                        const dayOfWeek = currentDate.getDay()
+                                        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+                                        
+                                        const isHoliday = allHolidays.some(holiday => 
+                                          new Date(holiday.date).toDateString() === currentDate.toDateString()
+                                        )
+                                        
+                                        if (!isWeekend && !isHoliday) {
+                                          workingDaysInMonth++
+                                        }
+                                      }
+                                      
+                                      return {
+                                        ...leave,
+                                        workingDaysInMonth
+                                      }
+                                    })
+
+                                    cumulativeRTT += monthLeavesCumul
+                                      .filter(leave => leave.type === 'rtt')
+                                      .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
+                                    
+                                    cumulativeCP += monthLeavesCumul
+                                      .filter(leave => leave.type === 'cp')
+                                      .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
+                                    
+                                    cumulativeCET += monthLeavesCumul
+                                      .filter(leave => leave.type === 'cet')
+                                      .reduce((sum, leave) => sum + leave.workingDaysInMonth, 0)
+                                  }
+
+                                  nextMonthRttRemaining = Math.max(0, rttReliquat2024 + rttQuota2025 - cumulativeRTT)
+                                  if (nextMonth < 4) {
+                                    nextMonthCpRemaining = Math.max(0, cpReliquat2024 - cumulativeCP)
+                                  } else {
+                                    nextMonthCpRemaining = Math.max(0, cpReliquat2024 + cpQuota2025 - cumulativeCP)
+                                  }
+                                  nextMonthCetRemaining = Math.max(0, cetReliquat2024 + cetQuota2025 - cumulativeCET)
+                                } else {
+                                  nextMonthRttRemaining = 0
+                                  nextMonthCpRemaining = 0
+                                  nextMonthCetRemaining = 0
+                                }
+
+                                // Vérifier les correspondances pour les couleurs
+                                const prisRttMatch = rttTaken === nextMonthRttTaken
+                                const prisCpMatch = cpTaken === nextMonthCpTaken
+                                const prisCetMatch = cetTaken === nextMonthCetTaken
+                                
+                                const soldeCpMatch = cpSolde === nextMonthCpRemaining
+                                const soldeCetMatch = cetSolde === nextMonthCetRemaining
+                                
+                                return (
+                                  <>
+                                    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                      <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">
+                                        Pris
+                                      </td>
+                                      <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${rttPrisMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>
+                                        {rttPris}
+                                      </td>
+                                      <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${cpPrisMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>
+                                        {cpPris}
+                                      </td>
+                                      <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${cetPrisMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>
+                                        {cetPris}
+                                      </td>
+                                    </tr>
+                                    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                      <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">
+                                        Solde
+                                      </td>
+                                      <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700">
+                                        -
+                                      </td>
+                                      <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${cpSoldeMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>
+                                        {cpSolde}
+                                      </td>
+                                      <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${cetSoldeMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>
+                                        {cetSolde}
+                                      </td>
+                                    </tr>
+                                  </>
+                                );
+                              })()}
+                            </tbody>
+                          </table>
+                </div>
                       </div>
                     </div>
                   )
