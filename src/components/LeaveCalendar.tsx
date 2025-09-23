@@ -1004,15 +1004,29 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                         })()}
 
                         {/* Tableau de validation des données de feuille de paie */}
-                        <div>
-                          <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            Validation Feuille de Paie
-                    </div>
-                          <table className="w-full text-xs border-collapse border border-gray-200 dark:border-gray-700">
+                        {(() => {
+                          const payrollData = getPayrollDataForMonth(month + 1, year);
+                          
+                          // Vérifier s'il y a des données de feuille de paie
+                          const hasPayrollData = (payrollData?.cpReliquat !== undefined) ||
+                                               (payrollData?.rttPrisDansMois !== undefined) ||
+                                               (payrollData?.soldeCet !== undefined) ||
+                                               (payrollData?.cpPrisMoisPrecedent && payrollData.cpPrisMoisPrecedent.filter(date => date.trim() !== '').length > 0) ||
+                                               (payrollData?.cetPrisMoisPrecedent && payrollData.cetPrisMoisPrecedent.filter(date => date.trim() !== '').length > 0);
+                          
+                          // Si pas de données, ne pas afficher le tableau du tout
+                          if (!hasPayrollData) {
+                            return null;
+                          }
+                          
+                          return (
+                            <div>
+                              <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                Validation Feuille de Paie
+                              </div>
+                              <table className="w-full text-xs border-collapse border border-gray-200 dark:border-gray-700">
                             <tbody>
                               {(() => {
-                                const payrollData = getPayrollDataForMonth(month + 1, year);
-                                
                                 // Calculer les CP pris du mois précédent
                                 const cpPrisCount = payrollData?.cpPrisMoisPrecedent?.filter(date => date.trim() !== '').length || 0;
                                 // Calculer les CET pris du mois précédent  
@@ -1511,7 +1525,9 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                               })()}
                             </tbody>
                           </table>
-                </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   )

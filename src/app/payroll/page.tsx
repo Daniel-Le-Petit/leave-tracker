@@ -73,6 +73,18 @@ export default function PayrollPage() {
   
   // Fonction pour sauvegarder les données du mois actuel
   const saveCurrentMonthData = (showToast = true) => {
+    // Vérifier s'il y a des données à sauvegarder
+    const hasData = (payrollData.cpReliquat !== undefined) ||
+                   (payrollData.rttPrisDansMois !== undefined) ||
+                   (payrollData.soldeCet !== undefined) ||
+                   (payrollData.cpPrisMoisPrecedent && payrollData.cpPrisMoisPrecedent.filter(date => date.trim() !== '').length > 0) ||
+                   (payrollData.cetPrisMoisPrecedent && payrollData.cetPrisMoisPrecedent.filter(date => date.trim() !== '').length > 0)
+    
+    // Ne sauvegarder que s'il y a des données réelles
+    if (!hasData) {
+      return // Sortir sans sauvegarder ni afficher de message
+    }
+    
     const key = getMonthYearKey(payrollData.month || selectedMonth, payrollData.year || currentYear)
     const newData = {
       ...payrollDataByMonth,
@@ -86,28 +98,8 @@ export default function PayrollPage() {
   }
 
   // Sauvegarde automatique silencieuse quand les données changent
-  useEffect(() => {
-    // Ne pas sauvegarder automatiquement si c'est désactivé (pendant suppression)
-    if (disableAutoSave) return
-    
-    // Délai pour éviter trop de sauvegardes pendant la saisie
-    const timeoutId = setTimeout(() => {
-      // Ne sauvegarder que si au moins une valeur a été saisie (pas undefined)
-      const hasData = (payrollData.cpReliquat !== undefined) ||
-                     (payrollData.rttPrisDansMois !== undefined) ||
-                     (payrollData.soldeCet !== undefined) ||
-                     (payrollData.cpPrisMoisPrecedent && payrollData.cpPrisMoisPrecedent.filter(date => date.trim() !== '').length > 0) ||
-                     (payrollData.cetPrisMoisPrecedent && payrollData.cetPrisMoisPrecedent.filter(date => date.trim() !== '').length > 0)
-      
-      if (hasData) {
-        setIsSaving(true)
-        saveCurrentMonthData(false) // Sauvegarde silencieuse
-        setTimeout(() => setIsSaving(false), 500) // Arrêter l'indicateur après 500ms
-      }
-    }, 1000) // Attendre 1 seconde après le dernier changement
-
-    return () => clearTimeout(timeoutId)
-  }, [payrollData, disableAutoSave])
+  // Auto-sauvegarde désactivée - seule la sauvegarde manuelle est autorisée
+  // useEffect supprimé pour éviter toute sauvegarde automatique
 
   // Fonction pour valider les données saisies
   const validatePayrollData = () => {
@@ -1025,28 +1017,28 @@ POSSIBLES CAUSES:
                           Mois
                         </th>
                         <th className="border border-gray-300 dark:border-gray-600 px-2 py-3 text-center font-semibold text-gray-900 dark:text-white">
-                          A-FPD
+                          Reliquat CP (FPD)
                         </th>
                         <th className="border border-gray-300 dark:border-gray-600 px-2 py-3 text-center font-semibold text-gray-900 dark:text-white">
-                          A-LT
+                          Reliquat CP (LT)
                         </th>
                         <th className="border border-gray-300 dark:border-gray-600 px-2 py-3 text-center font-semibold text-gray-900 dark:text-white">
-                          B-FPD
+                          RTT Pris (FPD)
                         </th>
                         <th className="border border-gray-300 dark:border-gray-600 px-2 py-3 text-center font-semibold text-gray-900 dark:text-white">
-                          B-LT
+                          RTT Pris (LT)
                         </th>
                         <th className="border border-gray-300 dark:border-gray-600 px-2 py-3 text-center font-semibold text-gray-900 dark:text-white">
-                          C-FPD
+                          CP Pris (FPD)
                         </th>
                         <th className="border border-gray-300 dark:border-gray-600 px-2 py-3 text-center font-semibold text-gray-900 dark:text-white">
-                          C-LT
+                          CP Pris (LT)
                         </th>
                         <th className="border border-gray-300 dark:border-gray-600 px-2 py-3 text-center font-semibold text-gray-900 dark:text-white">
-                          D-FPD
+                          CET Pris (FPD)
                         </th>
                         <th className="border border-gray-300 dark:border-gray-600 px-2 py-3 text-center font-semibold text-gray-900 dark:text-white">
-                          D-LT
+                          CET Pris (LT)
                         </th>
                         <th className="border border-gray-300 dark:border-gray-600 px-2 py-3 text-center font-semibold text-gray-900 dark:text-white">
                           Actions
@@ -1133,9 +1125,20 @@ POSSIBLES CAUSES:
                                 <div className="flex space-x-1 justify-center">
                                 <button
                                   onClick={() => {
+                                      // Désactiver la sauvegarde automatique
+                                      setDisableAutoSave(true)
+                                      
+                                      // Sauvegarder d'abord les données actuelles
+                                      saveCurrentMonthData()
+                                      
                                     setSelectedMonth(parseInt(month))
                                     setCurrentYear(parseInt(year))
                                     setShowHistory(false)
+                                      
+                                      // Réactiver la sauvegarde automatique après un délai
+                                      setTimeout(() => {
+                                        setDisableAutoSave(false)
+                                      }, 1000)
                                   }}
                                   className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
                                 >
