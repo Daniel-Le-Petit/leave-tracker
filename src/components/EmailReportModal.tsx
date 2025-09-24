@@ -25,9 +25,9 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
 }) => {
   const [selectedLeaves, setSelectedLeaves] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<('rtt' | 'cp' | 'cet')[]>(['rtt', 'cp', 'cet']);
-  const [dateFilter, setDateFilter] = useState<'all' | 'last_week' | 'last_month' | 'current_month'>('last_week');
+  const [dateFilter, setDateFilter] = useState<'all' | 'last_week' | 'last_month' | 'current_month'>('all');
   const [includeForecast, setIncludeForecast] = useState(true);
-  const [includeReal, setIncludeReal] = useState(false);
+  const [includeReal, setIncludeReal] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
