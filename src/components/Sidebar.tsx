@@ -140,11 +140,6 @@ export default function Sidebar({ onExport, onImport, onEmail }: SidebarProps) {
       {/* Desktop sidebar */}
       <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
         <div className="flex flex-col flex-grow bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-          <div className="flex items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white whitespace-nowrap">
-              Leave-Tracker Dashboard
-            </h1>
-          </div>
           <SidebarContent navigationItems={navigationItems} actionItems={actionItems} />
         </div>
       </div>

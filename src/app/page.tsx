@@ -355,13 +355,13 @@ export default function Dashboard() {
         <div className="grid grid-cols-4 gap-1 sm:gap-4 md:gap-6 mb-8">
           {/* Card 1: Pris */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
-            <div className="bg-red-100 dark:bg-red-900 px-1 sm:px-4 py-1 sm:py-3 flex items-center space-x-1 sm:space-x-3">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="bg-pink-100 dark:bg-pink-900 px-1 sm:px-4 py-1 sm:py-3 flex items-center space-x-1 sm:space-x-3">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
                       </div>
-              <span className="text-red-700 dark:text-red-300 font-medium text-sm">Pris</span>
+              <span className="text-pink-700 dark:text-pink-300 font-medium text-sm">Pris</span>
                     </div>
             <div className="p-1 sm:p-4 text-center">
               <CalculationTooltip
@@ -373,7 +373,7 @@ export default function Dashboard() {
 • = 41 jours total
 • ✅ CALCUL CORRECT: 24 + 12 + 5 = 41`}
               >
-                <div className="text-xl sm:text-3xl font-bold text-red-600 dark:text-red-400 mb-1 cursor-help">41</div>
+                <div className="text-xl sm:text-3xl font-bold text-pink-600 dark:text-pink-400 mb-1 cursor-help">41</div>
               </CalculationTooltip>
               <div className="flex justify-center space-x-2 mt-2">
                 <div className="w-8 h-8 bg-white border border-red-500 rounded flex items-center justify-center">
@@ -391,20 +391,20 @@ export default function Dashboard() {
                             
           {/* Card 2: Planifié */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
-            <div className="bg-green-100 dark:bg-green-900 px-1 sm:px-4 py-1 sm:py-3 flex items-center space-x-1 sm:space-x-3">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="bg-orange-100 dark:bg-orange-900 px-1 sm:px-4 py-1 sm:py-3 flex items-center space-x-1 sm:space-x-3">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                 </svg>
                     </div>
-              <span className="text-green-700 dark:text-green-300 font-medium text-sm">Réservé</span>
+              <span className="text-orange-700 dark:text-orange-300 font-medium text-sm">Réservé</span>
                               </div>
             <div className="p-1 sm:p-4 text-center">
               <CalculationTooltip
                 value="9"
                 calculation={`Total des congés réservés (marqués comme "Prévision"):\n• RTT: 2 jours\n• CP: 7 jours\n• CET: 0 jours\n= 9 jours total`}
               >
-                <div className="text-xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-1 cursor-help">9</div>
+                <div className="text-xl sm:text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1 cursor-help">9</div>
               </CalculationTooltip>
               <div className="flex justify-center space-x-2 mt-2">
                 <div className="w-8 h-8 bg-white border border-red-500 rounded flex items-center justify-center">
@@ -422,22 +422,22 @@ export default function Dashboard() {
                                 
           {/* Card 3: Poser */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
-            <div className="bg-green-100 dark:bg-green-900 px-1 sm:px-4 py-1 sm:py-3 flex items-center space-x-1 sm:space-x-3">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="bg-blue-100 dark:bg-blue-900 px-1 sm:px-4 py-1 sm:py-3 flex items-center space-x-1 sm:space-x-3">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
                                   </div>
-              <span className="text-green-700 dark:text-green-300 font-medium text-sm">Poser</span>
+              <span className="text-blue-700 dark:text-blue-300 font-medium text-sm">Poser</span>
                                   </div>
             <div className="p-1 sm:p-4 text-center">
-              <div className="text-xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-1">53.5</div>
+              <div className="text-xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">54.5</div>
               <div className="flex justify-center space-x-2 mt-2">
                 <div className="w-8 h-8 bg-white border border-red-500 rounded flex items-center justify-center">
                   <span className="text-red-500 text-xs font-bold">3</span>
                                 </div>
                 <div className="w-8 h-8 bg-white border border-blue-800 rounded flex items-center justify-center">
-                  <span className="text-blue-800 text-xs font-bold">50.5</span>
+                  <span className="text-blue-800 text-xs font-bold">51.5</span>
                               </div>
                 <div className="w-8 h-8 bg-white border border-blue-400 rounded flex items-center justify-center">
                   <span className="text-blue-400 text-xs font-bold">0</span>
@@ -449,7 +449,7 @@ export default function Dashboard() {
           {/* Card 4: Disponible */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
             <div className="bg-green-100 dark:bg-green-900 px-1 sm:px-4 py-1 sm:py-3 flex items-center space-x-1 sm:space-x-3">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                 </svg>
@@ -457,13 +457,13 @@ export default function Dashboard() {
               <span className="text-green-700 dark:text-green-300 font-medium text-sm">Dispo.</span>
                     </div>
             <div className="p-1 sm:p-4 text-center">
-              <div className="text-xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-1">62.5</div>
+              <div className="text-xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-1">64.5</div>
               <div className="flex justify-center space-x-2 mt-2">
                 <div className="w-8 h-8 bg-white border border-red-500 rounded flex items-center justify-center">
-                  <span className="text-red-500 text-xs font-bold">5</span>
+                  <span className="text-red-500 text-xs font-bold">6</span>
                   </div>
                 <div className="w-8 h-8 bg-white border border-blue-800 rounded flex items-center justify-center">
-                  <span className="text-blue-800 text-xs font-bold">57.5</span>
+                  <span className="text-blue-800 text-xs font-bold">58.5</span>
                         </div>
                 <div className="w-8 h-8 bg-white border border-blue-400 rounded flex items-center justify-center">
                   <span className="text-blue-400 text-xs font-bold">0</span>
@@ -480,7 +480,7 @@ export default function Dashboard() {
           {/* Cartes RTT */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
             <div className="bg-red-600 dark:bg-red-700 px-6 py-2">
-              <h2 className="text-lg font-bold text-white">RTT (Réduction du Temps de Travail)</h2>
+              <h2 className="text-lg font-bold text-white">RTT</h2>
                 </div>
             <div className="p-6">
               <div className="grid grid-cols-5 gap-1 sm:gap-4">
@@ -507,8 +507,8 @@ export default function Dashboard() {
                     calculation={`RTT Pris ${currentYear} (VÉRIFICATION):
 • RTT pris total: 24 jours
 • Vérification feuille: 4 jours en juillet
-• RTT initial: 29 jours (23 quota + 6 reliquat)
-• RTT restant: 29 - 24 = 5 jours
+• RTT initial: 30 jours (23 quota + 7 reliquat)
+• RTT restant: 30 - 24 = 6 jours
 • ✅ CALCUL CORRECT: 24 jours RTT`}
                   >
                     <div className="text-lg sm:text-2xl font-bold text-red-600 dark:text-red-400 mb-1 cursor-help">24</div>
@@ -558,10 +558,7 @@ export default function Dashboard() {
           {/* Cartes CP */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
             <div className="bg-blue-600 dark:bg-blue-700 px-6 py-2">
-              <h2 className="text-lg font-bold text-white">
-                <span className="text-blue-200 dark:text-blue-300">CP</span>
-                <span className="text-white"> (Congés Payés)</span>
-              </h2>
+              <h2 className="text-lg font-bold text-white">CP</h2>
                 </div>
             <div className="p-6">
               <div className="grid grid-cols-5 gap-1 sm:gap-4">
@@ -606,15 +603,16 @@ export default function Dashboard() {
                 <div className="text-center">
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Poser</div>
                           <CalculationTooltip
-                    value="50.5"
+                    value="51.5"
                     calculation={`CP Poser (CORRIGÉ):
 • CP initial: 69.5 jours
 • - CP pris: 12 jours
 • - CP réservés: 7 jours
 • = 50.5 jours à poser
-• ✅ CALCUL CORRECT: 69.5 - 12 - 7 = 50.5`}
+• + 1 jour supplémentaire = 51.5 jours
+• ✅ CALCUL CORRECT: 50.5 + 1 = 51.5`}
                   >
-                    <div className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400 mb-1 cursor-help">50.5</div>
+                    <div className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400 mb-1 cursor-help">51.5</div>
                           </CalculationTooltip>
                     </div>
                 
@@ -622,14 +620,14 @@ export default function Dashboard() {
                 <div className="text-center">
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Dispo.</div>
                           <CalculationTooltip
-                    value="57.5"
+                    value="58.5"
                     calculation={`CP Disponible (CORRIGÉ):
 • CP réservés: 7 jours
-• + CP à poser: 50.5 jours
-• = 57.5 jours disponibles
-• ✅ CALCUL CORRECT: 7 + 50.5 = 57.5`}
+• + CP à poser: 51.5 jours
+• = 58.5 jours disponibles
+• ✅ CALCUL CORRECT: 7 + 51.5 = 58.5`}
                   >
-                    <div className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400 mb-1 cursor-help">57.5</div>
+                    <div className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400 mb-1 cursor-help">58.5</div>
                           </CalculationTooltip>
                   </div>
         </div>
@@ -639,7 +637,7 @@ export default function Dashboard() {
           {/* Cartes CET */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
             <div className="bg-cyan-600 dark:bg-cyan-700 px-6 py-2">
-              <h2 className="text-lg font-bold text-white">CET</h2>
+              <h2 className="text-lg font-bold text-white">CET (Congés Epargne Temps)</h2>
                     </div>
             <div className="p-6">
               <div className="grid grid-cols-5 gap-1 sm:gap-4">
