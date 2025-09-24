@@ -153,11 +153,6 @@ export default function CalendarPage() {
       onExport={handleExport}
       onImport={handleImport}
     >
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">📅 Calendrier des Congés</h1>
-        <p className="text-gray-600 dark:text-gray-400">Visualisez et gérez vos congés dans un calendrier interactif</p>
-      </div>
-
       <div className="space-y-8">
         {/* Calendrier des congés */}
         <LeaveCalendar

@@ -38,25 +38,13 @@ export default function ComparisonPage() {
   }
 
   const handleExport = () => {
-    // Charger les données de feuille de paie depuis localStorage
-    let payrollData = {}
-    try {
-      const savedPayrollData = localStorage.getItem('payrollDataByMonth')
-      if (savedPayrollData) {
-        payrollData = JSON.parse(savedPayrollData)
-      }
-    } catch (error) {
-      console.log('Erreur lors du chargement des données de feuille de paie:', error)
-    }
-
     const data = {
       leaves,
       settings,
       holidays,
       carryovers,
-      payrollData,
       exportDate: new Date().toISOString(),
-      version: '1.1'
+      version: '1.0'
     }
     
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
@@ -84,11 +72,6 @@ export default function ComparisonPage() {
       if (data.settings) await leaveStorage.saveSettings(data.settings)
       if (data.holidays) await leaveStorage.saveHolidays(data.holidays)
       if (data.carryovers) await leaveStorage.saveCarryoverLeaves(data.carryovers)
-      
-      // Importer les données de feuille de paie
-      if (data.payrollData) {
-        localStorage.setItem('payrollDataByMonth', JSON.stringify(data.payrollData))
-      }
       
       toast.success('Données importées avec succès')
       await loadData()
@@ -128,11 +111,6 @@ export default function ComparisonPage() {
       onExport={handleExport}
       onImport={handleImport}
     >
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Réel vs Prévision</h1>
-        <p className="text-gray-600 dark:text-gray-400">Comparaison des congés réels et en prévision</p>
-      </div>
-
       <div className="space-y-8">
         <div className="card">
           <div className="card-header">

@@ -1,11 +1,11 @@
 'use client'
 
-import { ArrowLeft, Calendar, Download, Moon, Save, Sun, Upload, Wrench } from 'lucide-react'
-import Link from 'next/link'
+import { Calendar, Download, Moon, Save, Sun, Upload, Wrench } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { AppSettings, LeaveEntry, PublicHoliday } from '../../types'
 import { leaveStorage } from '../../utils/storage'
+import MainLayout from '../../components/MainLayout'
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<AppSettings | null>(null)
@@ -203,55 +203,27 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="btn-secondary">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Retour
-              </Link>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                  ⚙️ Paramètres
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Configurez vos préférences et quotas de congés
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={handleExport}
-                className="btn-secondary"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Exporter
-              </button>
-              <button
-                onClick={handleImport}
-                className="btn-secondary"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Importer
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="btn-primary"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <MainLayout
+      onExport={handleExport}
+      onImport={handleImport}
+    >
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">⚙️ Paramètres</h1>
+        <p className="text-gray-600 dark:text-gray-400">Configurez vos préférences et quotas de congés</p>
+      </div>
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex justify-end mb-6">
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="btn-primary"
+        >
+          <Save className="w-4 h-4 mr-2" />
+          {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
+        </button>
+      </div>
+
+      <div className="max-w-4xl">
         <div className="space-y-8">
           {/* Quotas de congés */}
           <div className="card">
@@ -555,7 +527,7 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </MainLayout>
   )
 }

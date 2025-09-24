@@ -1,12 +1,12 @@
 'use client'
 
-import { ArrowLeft, Plus, Save, Trash2, BarChart3, Clock, Calendar, Package, Settings } from 'lucide-react'
-import Link from 'next/link'
+import { Plus, Save, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { CarryoverLeave, LeaveType } from '../../types'
 import { generateCarryoverSummary } from '../../utils/leaveUtils'
 import { leaveStorage } from '../../utils/storage'
+import MainLayout from '../../components/MainLayout'
 
 export default function CarryoverPage() {
   const [carryovers, setCarryovers] = useState<CarryoverLeave[]>([])
@@ -155,38 +155,8 @@ export default function CarryoverPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-6xl mx-auto header-mobile">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="btn-secondary btn-mobile">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Retour</span>
-              </Link>
-              <div>
-                <h1 className="header-title-mobile text-gray-900 dark:text-white">
-                  📦 Reliquats de congés
-                </h1>
-                <p className="header-subtitle-mobile text-gray-600 dark:text-gray-400">
-                  Gérez vos congés reportés des années précédentes
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="btn-primary btn-mobile"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Ajouter un reliquat</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mobile-safe-area">
+    <MainLayout>
+      <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Formulaire d'ajout/édition */}
           <div className="lg:col-span-1">
@@ -432,37 +402,7 @@ export default function CarryoverPage() {
             </div>
           </div>
         </div>
-      </main>
-
-      {/* Navigation Mobile */}
-      <nav className="mobile-nav md:hidden">
-        <div className="mobile-nav-container">
-          <Link href="/" className="mobile-nav-item-inactive">
-            <BarChart3 className="mobile-nav-icon" />
-            <span className="mobile-nav-label">Dashboard</span>
-          </Link>
-          <Link href="/add" className="mobile-nav-item-inactive">
-            <Plus className="mobile-nav-icon" />
-            <span className="mobile-nav-label">Ajouter</span>
-          </Link>
-          <Link href="/history" className="mobile-nav-item-inactive">
-            <Clock className="mobile-nav-icon" />
-            <span className="mobile-nav-label">Historique</span>
-          </Link>
-          <Link href="/calendar" className="mobile-nav-item-inactive">
-            <Calendar className="mobile-nav-icon" />
-            <span className="mobile-nav-label">Calendrier</span>
-          </Link>
-          <Link href="/carryover" className="mobile-nav-item-active">
-            <Package className="mobile-nav-icon" />
-            <span className="mobile-nav-label">Reliquats</span>
-          </Link>
-          <Link href="/settings" className="mobile-nav-item-inactive">
-            <Settings className="mobile-nav-icon" />
-            <span className="mobile-nav-label">Réglages</span>
-          </Link>
-        </div>
-      </nav>
-    </div>
+      </div>
+    </MainLayout>
   )
 }
