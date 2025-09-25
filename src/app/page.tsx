@@ -376,13 +376,13 @@ export default function Dashboard() {
                 <div className="text-xl sm:text-3xl font-bold text-pink-600 dark:text-pink-400 mb-1 cursor-help">41</div>
               </CalculationTooltip>
               <div className="flex justify-center space-x-2 mt-2">
-                <div className="w-8 h-8 bg-pink-100 border border-red-500 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-pink-100 rounded flex items-center justify-center">
                   <span className="text-red-500 text-xs font-bold">24</span>
                         </div>
-                <div className="w-8 h-8 bg-pink-100 border border-blue-800 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-pink-100 rounded flex items-center justify-center">
                   <span className="text-blue-800 text-xs font-bold">12</span>
                         </div>
-                <div className="w-8 h-8 bg-pink-100 border border-blue-400 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-pink-100 rounded flex items-center justify-center">
                   <span className="text-blue-400 text-xs font-bold">5</span>
                 </div>
               </div>
@@ -407,13 +407,13 @@ export default function Dashboard() {
                 <div className="text-xl sm:text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1 cursor-help">9</div>
               </CalculationTooltip>
               <div className="flex justify-center space-x-2 mt-2">
-                <div className="w-8 h-8 bg-orange-100 border border-red-500 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-orange-100 rounded flex items-center justify-center">
                   <span className="text-red-500 text-xs font-bold">2</span>
                               </div>
-                <div className="w-8 h-8 bg-orange-100 border border-blue-800 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-orange-100 rounded flex items-center justify-center">
                   <span className="text-blue-800 text-xs font-bold">7</span>
                             </div>
-                <div className="w-8 h-8 bg-orange-100 border border-blue-400 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-orange-100 rounded flex items-center justify-center">
                   <span className="text-blue-400 text-xs font-bold">0</span>
                                   </div>
                                 </div>
@@ -433,13 +433,13 @@ export default function Dashboard() {
             <div className="p-1 sm:p-4 text-center bg-blue-50">
               <div className="text-xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">54.5</div>
               <div className="flex justify-center space-x-2 mt-2">
-                <div className="w-8 h-8 bg-blue-100 border border-red-500 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
                   <span className="text-red-500 text-xs font-bold">3</span>
                                 </div>
-                <div className="w-8 h-8 bg-blue-100 border border-blue-800 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
                   <span className="text-blue-800 text-xs font-bold">51.5</span>
                               </div>
-                <div className="w-8 h-8 bg-blue-100 border border-blue-400 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
                   <span className="text-blue-400 text-xs font-bold">0</span>
                             </div>
                     </div>
@@ -459,13 +459,13 @@ export default function Dashboard() {
             <div className="p-1 sm:p-4 text-center bg-green-50">
               <div className="text-xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-1">64.5</div>
               <div className="flex justify-center space-x-2 mt-2">
-                <div className="w-8 h-8 bg-green-100 border border-red-500 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center">
                   <span className="text-red-500 text-xs font-bold">6</span>
                   </div>
-                <div className="w-8 h-8 bg-green-100 border border-blue-800 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center">
                   <span className="text-blue-800 text-xs font-bold">58.5</span>
                         </div>
-                <div className="w-8 h-8 bg-green-100 border border-blue-400 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center">
                   <span className="text-blue-400 text-xs font-bold">0</span>
                         </div>
                         </div>
