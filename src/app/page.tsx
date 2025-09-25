@@ -355,7 +355,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-4 gap-1 sm:gap-4 md:gap-6 mb-8">
           {/* Card 1: Pris */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
-            <div className="bg-pink-100 dark:bg-pink-900 px-1 sm:px-4 py-1 sm:py-3 flex items-center space-x-1 sm:space-x-3">
+            <div className="bg-pink-200 dark:bg-pink-800 px-1 sm:px-4 py-1 sm:py-3 flex items-center space-x-1 sm:space-x-3">
               <div className="w-6 h-6 sm:w-8 sm:h-8 bg-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -363,7 +363,7 @@ export default function Dashboard() {
                       </div>
               <span className="text-pink-700 dark:text-pink-300 font-medium text-sm">Pris</span>
                     </div>
-            <div className="p-1 sm:p-4 text-center">
+            <div className="p-1 sm:p-4 text-center bg-pink-50">
               <CalculationTooltip
                 value="41"
                 calculation={`Total des congés pris depuis le 31/05/${currentYear} (VÉRIFICATION):
@@ -376,13 +376,13 @@ export default function Dashboard() {
                 <div className="text-xl sm:text-3xl font-bold text-pink-600 dark:text-pink-400 mb-1 cursor-help">41</div>
               </CalculationTooltip>
               <div className="flex justify-center space-x-2 mt-2">
-                <div className="w-8 h-8 bg-white border border-red-500 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-pink-100 border border-red-500 rounded flex items-center justify-center">
                   <span className="text-red-500 text-xs font-bold">24</span>
                         </div>
-                <div className="w-8 h-8 bg-white border border-blue-800 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-pink-100 border border-blue-800 rounded flex items-center justify-center">
                   <span className="text-blue-800 text-xs font-bold">12</span>
                         </div>
-                <div className="w-8 h-8 bg-white border border-blue-400 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-pink-100 border border-blue-400 rounded flex items-center justify-center">
                   <span className="text-blue-400 text-xs font-bold">5</span>
                 </div>
               </div>
@@ -399,7 +399,7 @@ export default function Dashboard() {
                     </div>
               <span className="text-orange-700 dark:text-orange-300 font-medium text-sm">Réservé</span>
                               </div>
-            <div className="p-1 sm:p-4 text-center">
+            <div className="p-1 sm:p-4 text-center bg-orange-50">
               <CalculationTooltip
                 value="9"
                 calculation={`Total des congés réservés (marqués comme "Prévision"):\n• RTT: 2 jours\n• CP: 7 jours\n• CET: 0 jours\n= 9 jours total`}
@@ -407,13 +407,13 @@ export default function Dashboard() {
                 <div className="text-xl sm:text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1 cursor-help">9</div>
               </CalculationTooltip>
               <div className="flex justify-center space-x-2 mt-2">
-                <div className="w-8 h-8 bg-white border border-red-500 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-orange-100 border border-red-500 rounded flex items-center justify-center">
                   <span className="text-red-500 text-xs font-bold">2</span>
                               </div>
-                <div className="w-8 h-8 bg-white border border-blue-800 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-orange-100 border border-blue-800 rounded flex items-center justify-center">
                   <span className="text-blue-800 text-xs font-bold">7</span>
                             </div>
-                <div className="w-8 h-8 bg-white border border-blue-400 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-orange-100 border border-blue-400 rounded flex items-center justify-center">
                   <span className="text-blue-400 text-xs font-bold">0</span>
                                   </div>
                                 </div>
@@ -430,16 +430,16 @@ export default function Dashboard() {
                                   </div>
               <span className="text-blue-700 dark:text-blue-300 font-medium text-sm">Poser</span>
                                   </div>
-            <div className="p-1 sm:p-4 text-center">
+            <div className="p-1 sm:p-4 text-center bg-blue-50">
               <div className="text-xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">54.5</div>
               <div className="flex justify-center space-x-2 mt-2">
-                <div className="w-8 h-8 bg-white border border-red-500 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-100 border border-red-500 rounded flex items-center justify-center">
                   <span className="text-red-500 text-xs font-bold">3</span>
                                 </div>
-                <div className="w-8 h-8 bg-white border border-blue-800 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-100 border border-blue-800 rounded flex items-center justify-center">
                   <span className="text-blue-800 text-xs font-bold">51.5</span>
                               </div>
-                <div className="w-8 h-8 bg-white border border-blue-400 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-100 border border-blue-400 rounded flex items-center justify-center">
                   <span className="text-blue-400 text-xs font-bold">0</span>
                             </div>
                     </div>
@@ -456,16 +456,16 @@ export default function Dashboard() {
                       </div>
               <span className="text-green-700 dark:text-green-300 font-medium text-sm">Dispo.</span>
                     </div>
-            <div className="p-1 sm:p-4 text-center">
+            <div className="p-1 sm:p-4 text-center bg-green-50">
               <div className="text-xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-1">64.5</div>
               <div className="flex justify-center space-x-2 mt-2">
-                <div className="w-8 h-8 bg-white border border-red-500 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-green-100 border border-red-500 rounded flex items-center justify-center">
                   <span className="text-red-500 text-xs font-bold">6</span>
                   </div>
-                <div className="w-8 h-8 bg-white border border-blue-800 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-green-100 border border-blue-800 rounded flex items-center justify-center">
                   <span className="text-blue-800 text-xs font-bold">58.5</span>
                         </div>
-                <div className="w-8 h-8 bg-white border border-blue-400 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-green-100 border border-blue-400 rounded flex items-center justify-center">
                   <span className="text-blue-400 text-xs font-bold">0</span>
                         </div>
                         </div>
@@ -482,7 +482,7 @@ export default function Dashboard() {
             <div className="bg-red-600 dark:bg-red-700 px-6 py-2">
               <h2 className="text-lg font-bold text-white">RTT</h2>
                 </div>
-            <div className="p-6">
+            <div className="p-6 bg-red-50">
               <div className="grid grid-cols-5 gap-1 sm:gap-4">
                 {/* Quota initial RTT */}
                 <div className="text-center">
@@ -560,7 +560,7 @@ export default function Dashboard() {
             <div className="bg-blue-600 dark:bg-blue-700 px-6 py-2">
               <h2 className="text-lg font-bold text-white">CP</h2>
                 </div>
-            <div className="p-6">
+            <div className="p-6 bg-blue-50">
               <div className="grid grid-cols-5 gap-1 sm:gap-4">
                 {/* Quota initial CP */}
                 <div className="text-center">
@@ -639,7 +639,7 @@ export default function Dashboard() {
             <div className="bg-cyan-600 dark:bg-cyan-700 px-6 py-2">
               <h2 className="text-lg font-bold text-white">CET (Congés Epargne Temps)</h2>
                     </div>
-            <div className="p-6">
+            <div className="p-6 bg-cyan-50">
               <div className="grid grid-cols-5 gap-1 sm:gap-4">
                 {/* Quota initial CET */}
                 <div className="text-center">
@@ -686,12 +686,8 @@ export default function Dashboard() {
                     </div>
       )}
 
-      {/* Contenu principal */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Colonne gauche - Sections principales */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Bloc Évolution annuelle en pleine largeur */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      {/* Bloc Évolution annuelle en pleine largeur */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
               <div className="space-y-4">
                 <div className="flex justify-start items-center">
                   <div className="group relative">
@@ -880,7 +876,10 @@ export default function Dashboard() {
               </div>
             </div>
 
-
+      {/* Contenu principal */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Colonne gauche - Sections principales */}
+        <div className="lg:col-span-2 space-y-6">
           {/* Bloc Incohérences détectées */}
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="flex items-center space-x-3 mb-4">
@@ -896,7 +895,7 @@ export default function Dashboard() {
         </div>
                 <button 
               onClick={handleCorrigerIncoherences}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+              className="w-auto bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
               title="Aller à la page Validation feuille de paye pour corriger les incohérences"
             >
               Corriger maintenant
