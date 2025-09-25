@@ -217,6 +217,17 @@ export default function Dashboard() {
     return calculateDashboardCards(leaves, settings.quotas, carryovers, currentYear)
   }, [leaves, settings, carryovers, currentYear])
 
+  const formatTodayDate = () => {
+    const today = new Date()
+    const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
+    const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+    const dayName = days[today.getDay()]
+    const day = today.getDate()
+    const month = months[today.getMonth()]
+    const year = today.getFullYear()
+    return `${dayName} ${day} ${month} ${year}`
+  }
+
   // Calculer la répartition mensuelle réelle pour le graphique
   const monthlyLeaveData = useMemo(() => {
     const monthlyData = Array.from({ length: 12 }, (_, index) => {
@@ -311,42 +322,12 @@ export default function Dashboard() {
             <p className="text-lg text-gray-600 dark:text-gray-400">Gestion et suivi de vos congés</p>
         </div>
 
-          {/* Sélecteur d'année stylé */}
-          <div className="flex items-center space-x-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-2">
-              <button
-                    onClick={goToPreviousYear}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group"
-              title={`Année précédente (${currentYear - 1})`}
-                  >
-              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              </button>
-            
-            <div className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-bold text-lg min-w-[100px] text-center shadow-md">
-              {currentYear}
+          {/* Date du jour */}
+          <div className="text-center">
+            <div className="text-lg font-bold text-gray-900 dark:text-white bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-lg">
+              {formatTodayDate()}
             </div>
-            
-              <button
-              onClick={goToNextYear}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group"
-              title={`Année suivante (${currentYear + 1})`}
-            >
-              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-              </button>
-            
-            {currentYear !== new Date().getFullYear() && (
-              <button
-                onClick={goToCurrentYear}
-                className="px-3 py-1 text-sm bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-800 transition-colors"
-                title="Revenir à l'année actuelle"
-              >
-                Aujourd'hui
-                  </button>
-            )}
-                </div>
+          </div>
               </div>
             </div>
 
@@ -479,8 +460,8 @@ export default function Dashboard() {
         <div className="space-y-6 mb-8">
           {/* Cartes RTT */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
-            <div className="bg-red-600 dark:bg-red-700 px-6 py-2">
-              <h2 className="text-lg font-bold text-white">RTT</h2>
+            <div className="bg-red-200 dark:bg-red-800 px-6 py-2">
+              <h2 className="text-lg font-bold text-red-800 dark:text-red-200">RTT</h2>
                 </div>
             <div className="p-6 bg-red-50">
               <div className="grid grid-cols-5 gap-1 sm:gap-4">
@@ -557,8 +538,8 @@ export default function Dashboard() {
 
           {/* Cartes CP */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
-            <div className="bg-blue-600 dark:bg-blue-700 px-6 py-2">
-              <h2 className="text-lg font-bold text-white">CP</h2>
+            <div className="bg-blue-200 dark:bg-blue-800 px-6 py-2">
+              <h2 className="text-lg font-bold text-blue-800 dark:text-blue-200">CP</h2>
                 </div>
             <div className="p-6 bg-blue-50">
               <div className="grid grid-cols-5 gap-1 sm:gap-4">
@@ -636,8 +617,8 @@ export default function Dashboard() {
                             
           {/* Cartes CET */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
-            <div className="bg-cyan-600 dark:bg-cyan-700 px-6 py-2">
-              <h2 className="text-lg font-bold text-white">CET (Congés Epargne Temps)</h2>
+            <div className="bg-cyan-200 dark:bg-cyan-800 px-6 py-2">
+              <h2 className="text-lg font-bold text-cyan-800 dark:text-cyan-200">CET (Congés Epargne Temps)</h2>
                     </div>
             <div className="p-6 bg-cyan-50">
               <div className="grid grid-cols-5 gap-1 sm:gap-4">
