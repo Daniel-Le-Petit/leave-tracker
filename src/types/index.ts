@@ -12,6 +12,7 @@ export interface LeaveEntry {
   halfDayType?: 'morning' | 'afternoon'
   isForecast: boolean
   description?: string
+  notes?: string
   createdAt: string
   updatedAt: string
 }
