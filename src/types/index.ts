@@ -1,3 +1,66 @@
+// Types pour le leave-tracker
+
+export type LeaveType = 'rtt' | 'cp' | 'cet' | 'pipe'
+
+export interface LeaveEntry {
+  id: string
+  type: LeaveType
+  startDate: string
+  endDate: string
+  workingDays: number
+  isHalfDay: boolean
+  halfDayType?: 'morning' | 'afternoon'
+  isForecast: boolean
+  description?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AppSettings {
+  darkMode: boolean
+  language: string
+  notifications: boolean
+  email: string
+  firstName: string
+  lastName: string
+}
+
+export interface LeaveBalance {
+  type: LeaveType
+  initial: number
+  taken: number
+  remaining: number
+  carryover?: number
+}
+
+export interface PublicHoliday {
+  id: string
+  date: string
+  name: string
+  year: number
+}
+
+export interface CarryoverLeave {
+  id: string
+  type: LeaveType
+  year: number
+  days: number
+  description: string
+  createdAt: string
+}
+
+export interface PayrollData {
+  id: string
+  month: number
+  year: number
+  rttPrisDansMois: number
+  cpPrisMoisPrecedent: string[]
+  cpReliquat: number
+  soldeCet: number
+  createdAt: string
+  updatedAt: string
+}
+
 // Types pour le transcripteur IA
 
 export interface TranscriptionSegment {
