@@ -1,149 +1,123 @@
-// Types de base pour les congés
-export type LeaveType = 'cp' | 'rtt' | 'cet' | 'pipe' | 'sick';
+// Types pour le transcripteur IA
 
-export interface LeaveEntry {
-  id: string;
-  type: LeaveType;
-  startDate: string; // ISO date string
-  endDate: string; // ISO date string
-  workingDays: number;
-  notes?: string;
-  isHalfDay?: boolean;
-  halfDayType?: 'morning' | 'afternoon';
-  isForecast?: boolean;
-  createdAt: string;
-  updatedAt: string;
+export interface TranscriptionSegment {
+  id: string
+  text: string
+  startTime: number
+  endTime: number
+  confidence: number
+  speakerId?: string
+  speakerName?: string
+  isCorrected: boolean
+  originalText?: string
 }
 
-export interface PublicHoliday {
-  id: string;
-  date: string; // ISO date string
-  name: string;
-  year: number;
-  country?: string;
+export interface Speaker {
+  id: string
+  name: string
+  voiceProfile: {
+    pitch: number
+    speed: number
+    accent: string
+  }
+  isActive: boolean
+  lastSeen: Date
 }
 
-export interface AppSettings {
-  id?: string;
-  firstDayOfWeek: 'monday' | 'sunday';
-  country: string;
-  publicHolidays: PublicHoliday[];
-  quotas: { type: LeaveType; yearlyQuota: number; carryover?: number }[];
-  darkMode: boolean;
-  notifications: boolean;
-  // Legacy properties for backward compatibility
-  rttQuota?: number;
-  cpQuota?: number;
-  cetQuota?: number;
-  year?: number;
-  createdAt?: string;
-  updatedAt?: string;
+export interface TranscriptionSession {
+  id: string
+  title: string
+  startTime: Date
+  endTime?: Date
+  participants: Speaker[]
+  segments: TranscriptionSegment[]
+  isRecording: boolean
+  isTranscribing: boolean
+  consent: ConsentData
+  settings: SessionSettings
 }
 
-export interface LeaveBalance {
-  type: LeaveType;
-  taken: number;
-  used: number; // Alias pour taken
-  remaining: number;
-  total: number;
-  year: number;
+export interface ConsentData {
+  recording: boolean
+  transcription: boolean
+  storage: boolean
+  sharing: boolean
+  retentionDays: number
+  timestamp: string
+  sessionId: string
 }
 
-export interface CarryoverLeave {
-  id: string;
-  type: LeaveType;
-  year: number;
-  days: number;
-  description?: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
+export interface SessionSettings {
+  language: string
+  autoCorrect: boolean
+  realTimeCorrection: boolean
+  speakerDiarization: boolean
+  noiseReduction: boolean
+  sensitivity: number
 }
 
-export interface CalendarDay {
-  date: Date;
-  isCurrentMonth: boolean;
-  isToday: boolean;
-  isWeekend: boolean;
-  isHoliday: boolean;
-  leaves: LeaveEntry[];
+export interface CorrectionSuggestion {
+  original: string
+  suggested: string
+  confidence: number
+  context: string
 }
 
-// Types pour la validation des feuilles de paie
-export interface PayrollData {
-  id: string;
-  month: number; // 1-12
-  year: number;
-  
-  // Données de la feuille de paie
-  cpReliquat: number; // Reliquat CP du mois précédent
-  rttPrisDansMois: number; // RTT pris du mois précédent
-  soldeCet: number; // Solde CET du mois précédent
-  
-  // CP pris du mois précédent (dates spécifiques)
-  cpPrisMoisPrecedent: string[]; // ["2025-07-15", "2025-07-16", "2025-07-17", "2025-07-18"]
-  
-  // CET pris du mois précédent (dates spécifiques)
-  cetPrisMoisPrecedent: string[]; // ["2025-07-22", "2025-07-23"]
-  
-  // Jours fériés du mois précédent
-  joursFeries: string[]; // ["2025-07-14"]
-  
-  // Métadonnées
-  createdAt: string;
-  updatedAt: string;
+export interface ExportOptions {
+  format: 'txt' | 'pdf' | 'docx' | 'json' | 'srt'
+  includeTimestamps: boolean
+  includeSpeakers: boolean
+  includeConfidence: boolean
+  language: string
 }
 
-export interface PayrollValidation {
-  month: number;
-  year: number;
-  
-  // Données saisies vs calculées
-  cpReliquat: {
-    saisie: number;
-    calculee: number;
-    difference: number;
-    status: 'valid' | 'warning' | 'error';
-  };
-  
-  rttPrisDansMois: {
-    saisie: number;
-    calculee: number;
-    difference: number;
-    status: 'valid' | 'warning' | 'error';
-    rttLeavesDates?: {
-      startDate: string;
-      endDate: string;
-      workingDays: number;
-    }[];
-  };
-  
-  soldeCet: {
-    saisie: number;
-    calculee: number;
-    difference: number;
-    status: 'valid' | 'warning' | 'error';
-  };
-  
-  // Validation des dates CP
-  cpPrisMoisPrecedent: {
-    saisies: string[];
-    calculees: number;
-    manquantes: string[];
-    enTrop: string[];
-    status: 'valid' | 'warning' | 'error';
-  };
-  
-  // Validation des jours fériés
-  joursFeries: {
-    saisies: string[];
-    calculees: string[];
-    manquantes: string[];
-    enTrop: string[];
-    status: 'valid' | 'warning' | 'error';
-  };
-  
-  // Score global de validation
-  scoreGlobal: number; // 0-100
-  statusGlobal: 'valid' | 'warning' | 'error';
+export interface AudioSettings {
+  sampleRate: number
+  channels: number
+  bitDepth: number
+  format: 'wav' | 'mp3' | 'webm'
+}
+
+export interface TranscriptionStats {
+  totalWords: number
+  totalTime: number
+  averageConfidence: number
+  correctionsCount: number
+  speakersCount: number
+  segmentsCount: number
+}
+
+export interface APIResponse<T> {
+  success: boolean
+  data?: T
+  error?: string
+  timestamp: string
+}
+
+export interface WebSocketMessage {
+  type: 'transcription' | 'correction' | 'speaker_change' | 'error' | 'status'
+  data: any
+  timestamp: string
+  sessionId: string
+}
+
+export interface TranscriptionError {
+  code: string
+  message: string
+  details?: any
+  timestamp: string
+}
+
+export interface VoiceProfile {
+  id: string
+  name: string
+  samples: number
+  accuracy: number
+  lastUpdated: Date
+  features: {
+    pitch: number
+    formants: number[]
+    spectralCentroid: number
+    mfcc: number[]
+  }
 }

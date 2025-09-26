@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import { AppSettings, LeaveEntry, PublicHoliday } from '../../types'
 import { leaveStorage } from '../../utils/storage'
 import MainLayout from '../../components/MainLayout'
+import EmailReportModal from '../../components/EmailReportModal'
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<AppSettings | null>(null)
@@ -13,6 +14,7 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [leaves, setLeaves] = useState<LeaveEntry[]>([])
   const [holidays, setHolidays] = useState<PublicHoliday[]>([])
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
 
   useEffect(() => {
     loadSettings()
@@ -206,6 +208,7 @@ export default function SettingsPage() {
     <MainLayout
       onExport={handleExport}
       onImport={handleImport}
+      onEmail={() => setIsEmailModalOpen(true)}
     >
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">⚙️ Paramètres</h1>
@@ -528,6 +531,14 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal d'envoi d'email */}
+      <EmailReportModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        leaves={leaves}
+        currentYear={new Date().getFullYear()}
+      />
     </MainLayout>
   )
 }

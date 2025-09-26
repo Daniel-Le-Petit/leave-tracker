@@ -233,30 +233,30 @@ export default function HistoryPage() {
       {filteredLeaves.length > 0 ? (
         <div className="card">
           <div className="overflow-x-auto">
-            <table className="table">
-              <thead className="table-header">
-                <tr className="bg-gray-100 dark:bg-gray-800">
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">
+            <table className="w-full min-w-full table-auto border-collapse border border-gray-200 dark:border-gray-700">
+              <thead className="bg-gray-100 dark:bg-gray-800">
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700 w-1/4">
                     Date
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700 w-1/5">
                     Type
                   </th>
-                  <th className="px-4 py-2 text-center text-sm font-semibold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700 w-1/6">
                     Jours
                   </th>
-                  <th className="px-4 py-2 text-center text-sm font-semibold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700 w-1/6">
                     Mode
                   </th>
-                  <th className="px-4 py-2 text-center text-sm font-semibold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-white w-1/6">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="table-body">
+              <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredLeaves.map((leave) => (
                   <tr key={leave.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="table-cell">
+                    <td className="px-6 py-4 border-r border-gray-200 dark:border-gray-700">
                       <div className="text-sm">
                         <div className="font-medium text-gray-900 dark:text-white">
                           {formatDate(leave.startDate)} - {formatDate(leave.endDate)}
@@ -266,17 +266,17 @@ export default function HistoryPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="table-cell">
-                      <span className={`badge ${getLeaveTypeColor(leave.type)}`}>
+                    <td className="px-6 py-4 border-r border-gray-200 dark:border-gray-700">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getLeaveTypeColor(leave.type)}`}>
                         {leave.type.toUpperCase()}
                       </span>
                       {leave.isHalfDay && (
-                        <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                        <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                           ({leave.halfDayType === 'morning' ? 'Matin' : 'Après-midi'})
-                        </span>
+                        </div>
                       )}
                     </td>
-                    <td className="table-cell">
+                    <td className="px-6 py-4 text-center border-r border-gray-200 dark:border-gray-700">
                       <span className="font-semibold text-gray-900 dark:text-white">
                         {leave.workingDays}
                       </span>
@@ -284,26 +284,26 @@ export default function HistoryPage() {
                         jour{leave.workingDays > 1 ? 's' : ''}
                       </span>
                     </td>
-                    <td className="table-cell">
-                      <span className={`badge ${leave.isForecast ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'}`}>
+                    <td className="px-6 py-4 text-center border-r border-gray-200 dark:border-gray-700">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${leave.isForecast ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'}`}>
                         {leave.isForecast ? 'Prévision' : 'Réel'}
                       </span>
                     </td>
-                    <td className="table-cell">
-                      <div className="flex items-center space-x-2">
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex items-center justify-center space-x-3">
                         <button
                           onClick={() => {
                             // Naviguer vers la page d'édition
                             router.push(`/edit?id=${leave.id}`)
                           }}
-                          className="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200"
+                          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
                           title="Modifier"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(leave.id)}
-                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
                           title="Supprimer"
                         >
                           <Trash2 className="w-4 h-4" />

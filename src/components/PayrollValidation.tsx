@@ -91,20 +91,22 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
     const rttLeaves = previousMonthLeaves.filter(leave => leave.type === 'rtt')
     const rttPrisDansMois = rttLeaves.reduce((sum, leave) => sum + leave.workingDays, 0)
 
-    // Calculs CP
-    const cpPrisDansMois = monthLeaves
-      .filter(leave => leave.type === 'cp')
-      .reduce((sum, leave) => sum + leave.workingDays, 0)
+    // Calculs CP - CP pris dans le mois précédent
+    const cpLeaves = previousMonthLeaves.filter(leave => leave.type === 'cp')
+    const cpPrisMoisPrecedentCount = cpLeaves.reduce((sum, leave) => sum + leave.workingDays, 0)
 
-    // Calculer le nombre de jours CP du mois précédent (utiliser workingDays qui exclut les week-ends)
-    const cpPrisMoisPrecedentCount = previousMonthLeaves
-      .filter(leave => leave.type === 'cp')
-      .reduce((sum, leave) => sum + leave.workingDays, 0)
+    // Calculs CET - CET pris dans le mois précédent
+    const cetLeaves = previousMonthLeaves.filter(leave => leave.type === 'cet')
+    const cetPrisDansMois = cetLeaves.reduce((sum, leave) => sum + leave.workingDays, 0)
 
-    // Calculs CET
-    const cetPrisDansMois = monthLeaves
-      .filter(leave => leave.type === 'cet')
+    // Calcul du reliquat CP attendu (basé sur les données du dashboard)
+    // Reliquat CP = CP initial + reliquats - CP pris
+    const cpInitial = 25 // CP initial par défaut
+    const cpReliquats = 0 // Reliquats CP (à ajuster selon vos données)
+    const cpPrisTotal = leaves
+      .filter(leave => leave.type === 'cp' && new Date(leave.startDate).getFullYear() === year)
       .reduce((sum, leave) => sum + leave.workingDays, 0)
+    const cpReliquatAttendu = cpInitial + cpReliquats - cpPrisTotal
 
     return {
       rttPrisDansMois,
@@ -113,9 +115,14 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
         endDate: leave.endDate,
         workingDays: leave.workingDays
       })),
-      cpPrisDansMois,
       cpPrisMoisPrecedent: cpPrisMoisPrecedentCount,
-      cetPrisDansMois
+      cpPrisMoisPrecedentDates: cpLeaves.map(leave => ({
+        startDate: leave.startDate,
+        endDate: leave.endDate,
+        workingDays: leave.workingDays
+      })),
+      cetPrisDansMois,
+      cpReliquatAttendu
     }
   }
 
@@ -133,18 +140,41 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
       rttLeavesDates: expected.rttLeavesDates
     }
 
-    // Validation CP mois précédent
+    // Validation CP mois précédent - Comparer les dates
     const cpPrisValidation = {
       saisies: data.cpPrisMoisPrecedent,
       calculees: expected.cpPrisMoisPrecedent,
-      manquantes: [],
-      enTrop: [],
+      manquantes: expected.cpPrisMoisPrecedentDates.filter(expectedLeave => 
+        !data.cpPrisMoisPrecedent.some(saisieDate => {
+          const saisieDateObj = new Date(saisieDate)
+          const expectedStart = new Date(expectedLeave.startDate)
+          const expectedEnd = new Date(expectedLeave.endDate)
+          return saisieDateObj >= expectedStart && saisieDateObj <= expectedEnd
+        })
+      ).map(leave => leave.startDate),
+      enTrop: data.cpPrisMoisPrecedent.filter(saisieDate => 
+        !expected.cpPrisMoisPrecedentDates.some(expectedLeave => {
+          const saisieDateObj = new Date(saisieDate)
+          const expectedStart = new Date(expectedLeave.startDate)
+          const expectedEnd = new Date(expectedLeave.endDate)
+          return saisieDateObj >= expectedStart && saisieDateObj <= expectedEnd
+        })
+      ),
       status: (Math.abs(expected.cpPrisMoisPrecedent - data.cpPrisMoisPrecedent.length) <= 0.5 ? 'valid' : 
               Math.abs(expected.cpPrisMoisPrecedent - data.cpPrisMoisPrecedent.length) <= 1 ? 'warning' : 'error') as 'valid' | 'warning' | 'error'
     }
 
+    // Validation Reliquat CP
+    const cpReliquatValidation = {
+      saisie: data.cpReliquat,
+      calculee: expected.cpReliquatAttendu,
+      difference: data.cpReliquat - expected.cpReliquatAttendu,
+      status: (Math.abs(data.cpReliquat - expected.cpReliquatAttendu) <= 0.5 ? 'valid' : 
+              Math.abs(data.cpReliquat - expected.cpReliquatAttendu) <= 1 ? 'warning' : 'error') as 'valid' | 'warning' | 'error'
+    }
+
     // Calcul du score global
-    const validations = [rttValidation, cpPrisValidation]
+    const validations = [rttValidation, cpPrisValidation, cpReliquatValidation]
     const validCount = validations.filter(v => v.status === 'valid').length
     const scoreGlobal = Math.round((validCount / validations.length) * 100)
     
@@ -153,7 +183,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
     return {
       month: data.month,
       year: data.year,
-      cpReliquat: { saisie: data.cpReliquat, calculee: 0, difference: 0, status: 'valid' },
+      cpReliquat: cpReliquatValidation,
       rttPrisDansMois: rttValidation,
       soldeCet: { 
         saisie: data.soldeCet, 
@@ -187,9 +217,9 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
       setFormData({
         month: selectedMonth,
         year: currentYear,
-        cpReliquat: 47.5, // Reliquat CP du mois précédent
+        cpReliquat: expected.cpReliquatAttendu, // Reliquat CP calculé
         rttPrisDansMois: expected.rttPrisDansMois, // RTT pris du mois précédent
-        soldeCet: 5, // Solde CET du mois précédent
+        soldeCet: expected.cetPrisDansMois, // Solde CET du mois précédent
         cpPrisMoisPrecedent: [], // CP pris du mois précédent (dates)
         joursFeries: [] // Jours fériés du mois précédent
       })
@@ -316,6 +346,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
     
     const correctedData: PayrollData = {
       ...data,
+      cpReliquat: expected.cpReliquatAttendu,
       rttPrisDansMois: expected.rttPrisDansMois,
       soldeCet: expected.cetPrisDansMois,
       updatedAt: new Date().toISOString()
@@ -338,6 +369,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
         d.id === existingData.id 
           ? {
               ...d,
+              cpReliquat: expected.cpReliquatAttendu,
               rttPrisDansMois: expected.rttPrisDansMois,
               soldeCet: expected.cetPrisDansMois,
               updatedAt: new Date().toISOString()
@@ -352,7 +384,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
         id: Date.now().toString(),
         month: selectedMonth,
         year: currentYear,
-        cpReliquat: 47.5,
+        cpReliquat: expected.cpReliquatAttendu,
         rttPrisDansMois: expected.rttPrisDansMois,
         soldeCet: expected.cetPrisDansMois,
         cpPrisMoisPrecedent: [],
@@ -385,7 +417,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
   }
 
   return (
-    <div className="card">
+    <div className="card bg-green-50 dark:bg-green-900/10">
 
       <div className="card-header">
         <div className="flex flex-col space-y-2">
@@ -527,16 +559,19 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
         {(() => {
           const expected = calculateExpectedData(selectedMonth, currentYear)
           return (
-            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
               <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                   <span className="text-white text-sm font-bold">i</span>
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-2">
+                  <h4 className="text-sm font-semibold text-green-800 dark:text-green-200 mb-2">
                     Données calculées automatiquement pour {monthNames[selectedMonth - 1]} {currentYear}
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-blue-700 dark:text-blue-300">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-green-700 dark:text-green-300">
+                    <div>
+                      <strong>Reliquat CP calculé:</strong> {expected.cpReliquatAttendu} jours
+                    </div>
                     <div>
                       <strong>RTT pris ({monthNames[selectedMonth === 1 ? 11 : selectedMonth - 2]}):</strong> {expected.rttPrisDansMois} jours
                     </div>
@@ -546,11 +581,8 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                     <div>
                       <strong>CP pris ({monthNames[selectedMonth === 1 ? 11 : selectedMonth - 2]}):</strong> {expected.cpPrisMoisPrecedent} jours
                     </div>
-                    <div>
-                      <strong>Périodes RTT trouvées:</strong> {expected.rttLeavesDates.length} période(s)
-                    </div>
                   </div>
-                  <div className="mt-3 p-2 bg-blue-100 dark:bg-blue-800/30 rounded text-xs">
+                  <div className="mt-3 p-2 bg-green-100 dark:bg-green-800/30 rounded text-xs">
                     <strong>Logique:</strong> Toutes les données correspondent au mois précédent ({monthNames[selectedMonth === 1 ? 11 : selectedMonth - 2]})
                   </div>
                 </div>
@@ -621,7 +653,30 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Reliquat CP */}
+                    <div className={`rounded p-3 border-2 ${validation.cpReliquat.status === 'valid' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">Reliquat CP</span>
+                        {getStatusIcon(validation.cpReliquat.status)}
+                      </div>
+                      <div className="text-sm space-y-1">
+                        <div className="flex justify-between">
+                          <span>- Feuille de paie:</span>
+                          <span className="font-medium">{validation.cpReliquat.saisie}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>- Application:</span>
+                          <span className="font-medium">{validation.cpReliquat.calculee}</span>
+                        </div>
+                        {validation.cpReliquat.difference !== 0 && (
+                          <div className={`text-xs font-medium ${validation.cpReliquat.difference > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                            Différence: {validation.cpReliquat.difference > 0 ? '+' : ''}{validation.cpReliquat.difference}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
                     {/* RTT Pris dans le mois précédent */}
                     <div className={`rounded p-3 border-2 ${validation.rttPrisDansMois.status === 'valid' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'}`}>
                       <div className="flex items-center justify-between mb-2">
@@ -634,7 +689,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                           <span className="font-medium">{validation.rttPrisDansMois.saisie}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>- Calendrier:</span>
+                          <span>- Application:</span>
                           <span className="font-medium">{validation.rttPrisDansMois.calculee}</span>
                         </div>
                         {validation.rttPrisDansMois.difference !== 0 && (
@@ -654,11 +709,11 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                       <div className="text-sm space-y-1">
                         <div className="flex justify-between">
                           <span>- Feuille de paie:</span>
-                          <span className="font-medium">{validation.cpPrisMoisPrecedent.saisies.length} jours</span>
+                          <span className="font-medium">{validation.cpPrisMoisPrecedent.saisies.length} dates</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>- Calendrier:</span>
-                          <span className="font-medium">{validation.cpPrisMoisPrecedent.calculees} jours</span>
+                          <span>- Application:</span>
+                          <span className="font-medium">{validation.cpPrisMoisPrecedent.calculees} dates</span>
                         </div>
                         {validation.cpPrisMoisPrecedent.manquantes.length > 0 && (
                           <div className="text-xs text-red-600">
@@ -693,7 +748,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                           <span className="font-medium">{validation.soldeCet.saisie}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>- Calendrier:</span>
+                          <span>- Application:</span>
                           <span className="font-medium">{validation.soldeCet.calculee}</span>
                         </div>
                         {validation.soldeCet.difference !== 0 && (
@@ -706,7 +761,8 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                   </div>
 
                   {/* Résumé des incohérences - affiché seulement s'il y a des problèmes */}
-                  {(validation.rttPrisDansMois.difference !== 0 || 
+                  {(validation.cpReliquat.difference !== 0 ||
+                    validation.rttPrisDansMois.difference !== 0 || 
                     validation.cpPrisMoisPrecedent.manquantes.length > 0 || 
                     validation.cpPrisMoisPrecedent.enTrop.length > 0 || 
                     validation.soldeCet.difference !== 0) && (
@@ -716,6 +772,9 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                         <h4 className="font-semibold text-yellow-800 dark:text-yellow-200">Incohérences détectées</h4>
                       </div>
                       <div className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                        {validation.cpReliquat.difference !== 0 && (
+                          <div>• Reliquat CP: {validation.cpReliquat.difference > 0 ? 'Trop de jours saisis' : 'Jours manquants'} ({Math.abs(validation.cpReliquat.difference)} jour{Math.abs(validation.cpReliquat.difference) > 1 ? 's' : ''})</div>
+                        )}
                         {validation.rttPrisDansMois.difference !== 0 && (
                           <div>• RTT: {validation.rttPrisDansMois.difference > 0 ? 'Trop de jours saisis' : 'Jours manquants'} ({Math.abs(validation.rttPrisDansMois.difference)} jour{Math.abs(validation.rttPrisDansMois.difference) > 1 ? 's' : ''})</div>
                         )}
@@ -737,13 +796,23 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                     <div className="flex items-center mb-3">
                       <CheckCircle className="h-5 w-5 text-blue-600 mr-2" />
                       <h4 className="font-semibold text-blue-800 dark:text-blue-200">
-                        {validation.rttPrisDansMois.status === 'valid' && validation.cpPrisMoisPrecedent.status === 'valid' && validation.soldeCet.status === 'valid' 
+                        {validation.cpReliquat.status === 'valid' && validation.rttPrisDansMois.status === 'valid' && validation.cpPrisMoisPrecedent.status === 'valid' && validation.soldeCet.status === 'valid' 
                           ? 'Validation réussie' 
                           : 'Corrections attendues'
                         } :
                       </h4>
                     </div>
                     <div className="text-sm text-blue-700 dark:text-blue-300 space-y-3">
+                      {validation.cpReliquat.difference !== 0 && (
+                        <div>
+                          <div className="font-semibold mb-1">• <strong>Reliquat CP:</strong> {validation.cpReliquat.difference > 0 ? 'Réduire' : 'Augmenter'} le reliquat saisi</div>
+                          <div className="ml-4 text-xs space-y-1">
+                            <div>📊 <strong>Feuille de paie:</strong> {validation.cpReliquat.saisie} jour{validation.cpReliquat.saisie > 1 ? 's' : ''} CP reliquat</div>
+                            <div>📅 <strong>Application calculée:</strong> {validation.cpReliquat.calculee} jour{validation.cpReliquat.calculee > 1 ? 's' : ''} CP reliquat</div>
+                            <div>⚖️ <strong>Action:</strong> {validation.cpReliquat.difference > 0 ? 'Réduire de' : 'Augmenter de'} {Math.abs(validation.cpReliquat.difference)} jour{Math.abs(validation.cpReliquat.difference) > 1 ? 's' : ''} le reliquat CP</div>
+                          </div>
+                        </div>
+                      )}
                       {validation.rttPrisDansMois.difference !== 0 && (
                         <div>
                           <div className="font-semibold mb-1">• <strong>RTT:</strong> {validation.rttPrisDansMois.difference > 0 ? 'Réduire' : 'Augmenter'} le nombre de jours saisis</div>
@@ -808,7 +877,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                           </div>
                         </div>
                       )}
-                      {validation.rttPrisDansMois.status === 'valid' && validation.cpPrisMoisPrecedent.status === 'valid' && validation.soldeCet.status === 'valid' && (
+                      {validation.cpReliquat.status === 'valid' && validation.rttPrisDansMois.status === 'valid' && validation.cpPrisMoisPrecedent.status === 'valid' && validation.soldeCet.status === 'valid' && (
                         <div className="text-green-600 dark:text-green-400">✅ Toutes les données sont cohérentes !</div>
                       )}
                     </div>

@@ -158,9 +158,6 @@ export default function ComparisonPage() {
                       <th className="px-4 py-3 text-left text-sm font-medium text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
                         Mois
                       </th>
-                      <th colSpan={1} className="px-4 py-3 text-center text-sm font-medium text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-                        {/* Colonne vide */}
-                      </th>
                       <th colSpan={4} className="px-4 py-3 text-center text-sm font-medium text-gray-900 dark:text-white bg-blue-200 dark:bg-blue-800 border-r border-gray-200 dark:border-gray-700">
                         Réel
                       </th>
@@ -170,7 +167,7 @@ export default function ComparisonPage() {
                     </tr>
                     <tr>
                       <th className="px-2 py-3 text-center text-sm font-medium text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-                        {/* Colonne vide décalée */}
+                        {/* Colonne vide pour alignement */}
                       </th>
                       <th className="px-2 py-3 text-center text-sm font-medium text-gray-900 dark:text-white bg-blue-100 dark:bg-blue-900 border-r border-gray-200 dark:border-gray-700">
                         RTT
@@ -204,33 +201,29 @@ export default function ComparisonPage() {
                         <td className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">
                           {monthData.monthName}
                         </td>
-                        {/* Colonne vide décalée */}
-                        <td className="px-2 py-2 text-center text-sm border-r border-gray-200 dark:border-gray-700">
-                          {/* Vide */}
-                        </td>
                         {/* RTT Réel */}
-                        <td className="px-2 py-2 text-center text-sm text-yellow-600 dark:text-yellow-400 font-semibold border-r border-gray-200 dark:border-gray-700">
+                        <td className="px-2 py-2 text-center text-sm text-red-600 dark:text-red-400 font-semibold border-r border-gray-200 dark:border-gray-700">
                           {monthData.rtt.real.taken > 0 ? monthData.rtt.real.taken : ''}
                         </td>
                         <td className="px-2 py-2 text-center text-sm font-semibold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">
                           {monthData.rtt.real.remaining}
                         </td>
                         {/* CP Réel */}
-                        <td className="px-2 py-2 text-center text-sm text-green-600 dark:text-green-400 font-semibold border-r border-gray-200 dark:border-gray-700">
+                        <td className="px-2 py-2 text-center text-sm text-blue-600 dark:text-blue-400 font-semibold border-r border-gray-200 dark:border-gray-700">
                           {monthData.cp.real.taken > 0 ? monthData.cp.real.taken : ''}
                         </td>
                         <td className="px-2 py-2 text-center text-sm font-semibold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">
                           {monthData.cp.real.remaining}
                         </td>
                         {/* RTT Prévisions */}
-                        <td className="px-2 py-2 text-center text-sm text-yellow-600 dark:text-yellow-400 font-semibold border-r border-gray-200 dark:border-gray-700">
+                        <td className="px-2 py-2 text-center text-sm text-red-600 dark:text-red-400 font-semibold border-r border-gray-200 dark:border-gray-700">
                           {monthData.rtt.forecast.taken > 0 ? monthData.rtt.forecast.taken : ''}
                         </td>
                         <td className="px-2 py-2 text-center text-sm font-semibold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">
                           {monthData.rtt.forecast.remaining}
                         </td>
                         {/* CP Prévisions */}
-                        <td className="px-2 py-2 text-center text-sm text-green-600 dark:text-green-400 font-semibold border-r border-gray-200 dark:border-gray-700">
+                        <td className="px-2 py-2 text-center text-sm text-blue-600 dark:text-blue-400 font-semibold border-r border-gray-200 dark:border-gray-700">
                           {monthData.cp.forecast.taken > 0 ? monthData.cp.forecast.taken : ''}
                         </td>
                         <td className="px-2 py-2 text-center text-sm font-semibold text-gray-900 dark:text-white">

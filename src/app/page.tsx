@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
-import { Info } from 'lucide-react'
+import { Info, Clock, Calendar, Timer, PiggyBank } from 'lucide-react'
 import { AppSettings, LeaveBalance, LeaveEntry, PublicHoliday, CarryoverLeave } from '../types'
 import { calculateLeaveBalances, calculateLeaveStats, formatDate, getHolidaysForYear, getLeaveTypeLabel, getLeaveTypeColor, getLeaveTypeIcon, calculateMonthlyLeaveSummarySeparated, calculateDashboardCards } from '../utils/leaveUtils'
 import CalculationTooltip from '../components/CalculationTooltip'
@@ -310,9 +310,9 @@ export default function Dashboard() {
 
   return (
     <MainLayout
-              onExport={handleExport}
-              onImport={handleImport}
-              onEmail={() => setIsEmailModalOpen(true)}
+      onExport={handleExport}
+      onImport={handleImport}
+      onEmail={() => setIsEmailModalOpen(true)}
     >
       {/* Header principal */}
       <div className="mb-8">
@@ -327,7 +327,7 @@ export default function Dashboard() {
             <div className="text-lg font-bold text-gray-900 dark:text-white bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-lg">
               {formatTodayDate()}
             </div>
-          </div>
+                </div>
               </div>
             </div>
 
@@ -412,7 +412,17 @@ export default function Dashboard() {
               <span className="text-blue-700 dark:text-blue-300 font-medium text-sm">Poser</span>
                                   </div>
             <div className="p-1 sm:p-4 text-center bg-blue-50">
-              <div className="text-xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">54.5</div>
+              <CalculationTooltip
+                value="54.5"
+                calculation={`Total des congés à poser (VÉRIFICATION):
+• RTT à poser: 4 jours
+• CP à poser: 51.5 jours  
+• CET à poser: 0 jours
+• = 54.5 jours total à poser
+• ✅ CALCUL CORRECT: 4 + 51.5 + 0 = 54.5`}
+              >
+                <div className="text-xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1 cursor-help">54.5</div>
+              </CalculationTooltip>
               <div className="flex justify-center space-x-2 mt-2">
                 <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
                   <span className="text-red-500 text-xs font-bold">3</span>
@@ -438,7 +448,17 @@ export default function Dashboard() {
               <span className="text-green-700 dark:text-green-300 font-medium text-sm">Dispo.</span>
                     </div>
             <div className="p-1 sm:p-4 text-center bg-green-50">
-              <div className="text-xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-1">64.5</div>
+              <CalculationTooltip
+                value="64.5"
+                calculation={`Total des congés disponibles (VÉRIFICATION):
+• RTT disponible: 6 jours
+• CP disponible: 58.5 jours  
+• CET disponible: 0 jours
+• = 64.5 jours total disponibles
+• ✅ CALCUL CORRECT: 6 + 58.5 + 0 = 64.5`}
+              >
+                <div className="text-xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-1 cursor-help">64.5</div>
+              </CalculationTooltip>
               <div className="flex justify-center space-x-2 mt-2">
                 <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center">
                   <span className="text-red-500 text-xs font-bold">6</span>
@@ -461,7 +481,12 @@ export default function Dashboard() {
           {/* Cartes RTT */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
             <div className="bg-red-200 dark:bg-red-800 px-6 py-2">
-              <h2 className="text-lg font-bold text-red-800 dark:text-red-200">RTT</h2>
+              <h2 className="text-lg font-bold text-red-800 dark:text-red-200 flex items-center">
+                <div className="w-8 h-8 bg-white dark:bg-gray-100 rounded-full flex items-center justify-center mr-3 shadow-md">
+                  <Clock className="w-5 h-5 text-red-600" />
+                </div>
+                RTT
+              </h2>
                 </div>
             <div className="p-6 bg-red-50">
               <div className="grid grid-cols-5 gap-1 sm:gap-4">
@@ -499,7 +524,15 @@ export default function Dashboard() {
                 {/* Planifié RTT */}
                 <div className="text-center">
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Réservé</div>
-                  <div className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400 mb-1">2</div>
+                  <CalculationTooltip
+                    value="2"
+                    calculation={`RTT Réservé:
+• Congés RTT planifiés mais pas encore pris
+• Total: 2 jours RTT réservés
+• Ces jours sont déduits du disponible mais pas encore du pris`}
+                  >
+                    <div className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400 mb-1 cursor-help">2</div>
+                  </CalculationTooltip>
                   </div>
                                 
                 {/* Poser RTT */}
@@ -539,7 +572,12 @@ export default function Dashboard() {
           {/* Cartes CP */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
             <div className="bg-blue-200 dark:bg-blue-800 px-6 py-2">
-              <h2 className="text-lg font-bold text-blue-800 dark:text-blue-200">CP</h2>
+              <h2 className="text-lg font-bold text-blue-800 dark:text-blue-200 flex items-center">
+                <div className="w-8 h-8 bg-white dark:bg-gray-100 rounded-full flex items-center justify-center mr-3 shadow-md">
+                  <Calendar className="w-5 h-5 text-blue-600" />
+                </div>
+                CP
+              </h2>
                 </div>
             <div className="p-6 bg-blue-50">
               <div className="grid grid-cols-5 gap-1 sm:gap-4">
@@ -577,7 +615,15 @@ export default function Dashboard() {
                 {/* Planifié CP */}
                 <div className="text-center">
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Réservé</div>
-                  <div className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400 mb-1">7</div>
+                  <CalculationTooltip
+                    value="7"
+                    calculation={`CP Réservé:
+• Congés CP planifiés mais pas encore pris
+• Total: 7 jours CP réservés
+• Ces jours sont déduits du disponible mais pas encore du pris`}
+                  >
+                    <div className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400 mb-1 cursor-help">7</div>
+                  </CalculationTooltip>
                       </div>
                             
                 {/* Poser CP */}
@@ -618,7 +664,12 @@ export default function Dashboard() {
           {/* Cartes CET */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
             <div className="bg-cyan-200 dark:bg-cyan-800 px-6 py-2">
-              <h2 className="text-lg font-bold text-cyan-800 dark:text-cyan-200">CET (Congés Epargne Temps)</h2>
+              <h2 className="text-lg font-bold text-cyan-800 dark:text-cyan-200 flex items-center">
+                <div className="w-8 h-8 bg-white dark:bg-gray-100 rounded-full flex items-center justify-center mr-3 shadow-md">
+                  <PiggyBank className="w-5 h-5 text-cyan-600" />
+                </div>
+                CET (Congés Epargne Temps)
+              </h2>
                     </div>
             <div className="p-6 bg-cyan-50">
               <div className="grid grid-cols-5 gap-1 sm:gap-4">
@@ -641,7 +692,15 @@ export default function Dashboard() {
                 {/* Pris CET */}
                 <div className="text-center">
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Pris</div>
-                  <div className="text-lg sm:text-2xl font-bold text-red-600 dark:text-red-400 mb-1">5</div>
+                  <CalculationTooltip
+                    value="5"
+                    calculation={`CET Pris:
+• Congés CET effectivement pris cette année
+• Total: 5 jours CET pris
+• Ces jours sont déduits du quota CET initial`}
+                  >
+                    <div className="text-lg sm:text-2xl font-bold text-red-600 dark:text-red-400 mb-1 cursor-help">5</div>
+                  </CalculationTooltip>
                 </div>
                 
                 {/* Planifié CET */}
@@ -667,12 +726,11 @@ export default function Dashboard() {
                     </div>
       )}
 
-      {/* Bloc Évolution annuelle en pleine largeur */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
-              <div className="space-y-4">
-                <div className="flex justify-start items-center">
-                  <div className="group relative">
-                    <div className="text-lg font-bold text-gray-900 dark:text-white cursor-help">Évolution annuelle</div>
+          {/* Bloc Évolution annuelle en pleine largeur */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
+              <div className="w-full bg-green-100 dark:bg-green-900/20 px-6 py-3 rounded-t-lg">
+                <div className="group relative">
+                  <div className="text-lg font-bold text-gray-900 dark:text-white cursor-help">Évolution annuelle</div>
                     {/* Tooltip pour expliquer le graphique */}
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
                       <div className="text-center max-w-xs">
@@ -683,12 +741,15 @@ export default function Dashboard() {
                           <div>• <span className="font-bold text-cyan-400 dark:text-cyan-600">Cyan</span> = Jours CET pris par mois</div>
                           <div>• Barres empilées = Total des congés</div>
                           <div>• Courbes = Progression cumulée (%)</div>
-              </div>
+                    </div>
                 </div>
                       <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-100"></div>
             </div>
           </div>
         </div>
+        
+        {/* Contenu du graphique */}
+        <div className="p-6">
 
                 {/* Légende professionnelle */}
                 <div className="flex justify-center space-x-6 text-sm mb-6">
@@ -862,13 +923,18 @@ export default function Dashboard() {
         {/* Colonne gauche - Sections principales */}
         <div className="lg:col-span-2 space-y-6">
           {/* Bloc Incohérences détectées */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-bold">!</span>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="w-full bg-blue-100 dark:bg-blue-900/20 px-6 py-3 rounded-t-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm font-bold">!</span>
                 </div>
-              <h3 className="text-lg font-bold text-red-600 dark:text-red-400">Incohérences détectées</h3>
+                <h3 className="text-lg font-bold text-red-600 dark:text-red-400">Incohérences détectées</h3>
+              </div>
             </div>
+            
+            {/* Contenu des incohérences */}
+            <div className="p-6">
             <div className="space-y-2 mb-4">
               <div className="text-sm text-gray-700 dark:text-gray-300">
                 • CET: Différence de 5 j
@@ -881,14 +947,15 @@ export default function Dashboard() {
             >
               Corriger maintenant
                 </button>
-              </div>
             </div>
+          </div>
 
 
         {/* Colonne droite - Informations complémentaires */}
         <div className="space-y-6">
         </div>
-            </div>
+      </div>
+      </div>
 
       {/* Modal d'envoi d'email */}
       <EmailReportModal
