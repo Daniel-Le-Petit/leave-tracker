@@ -9,6 +9,7 @@ import { formatDate } from '../../utils/leaveUtils'
 import { leaveStorage } from '../../utils/storage'
 import { useRouter } from 'next/navigation'
 import MainLayout from '../../components/MainLayout'
+import EmailReportModal from '../../components/EmailReportModal'
 
 export default function HistoryPage() {
   const [leaves, setLeaves] = useState<LeaveEntry[]>([])
@@ -18,6 +19,7 @@ export default function HistoryPage() {
   const [selectedType, setSelectedType] = useState('all')
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString())
   const [selectedMode, setSelectedMode] = useState('all')
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
 
   const router = useRouter()
 
