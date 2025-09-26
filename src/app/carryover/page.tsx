@@ -7,11 +7,14 @@ import { CarryoverLeave, LeaveType } from '../../types'
 import { generateCarryoverSummary } from '../../utils/leaveUtils'
 import { leaveStorage } from '../../utils/storage'
 import MainLayout from '../../components/MainLayout'
+import EmailReportModal from '../../components/EmailReportModal'
 
 export default function CarryoverPage() {
   const [carryovers, setCarryovers] = useState<CarryoverLeave[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+  const [leaves, setLeaves] = useState([]) // Pour le modal EmailReportModal
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     type: 'cp' as LeaveType,
@@ -155,7 +158,9 @@ export default function CarryoverPage() {
   }
 
   return (
-    <MainLayout>
+    <MainLayout
+      onEmail={() => setIsEmailModalOpen(true)}
+    >
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Formulaire d'ajout/édition */}
@@ -403,6 +408,14 @@ export default function CarryoverPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal d'envoi d'email */}
+      <EmailReportModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        leaves={leaves}
+        currentYear={new Date().getFullYear()}
+      />
     </MainLayout>
   )
 }

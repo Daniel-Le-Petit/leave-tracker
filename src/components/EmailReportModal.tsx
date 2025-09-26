@@ -356,7 +356,7 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
@@ -395,7 +395,7 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[70vh]">
+        <div className="p-6 overflow-y-auto max-h-[60vh]">
           {isSubmitted ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -416,8 +416,8 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Filtres</h3>
                   
                   {/* Types de congés */}
-                  <div className="mb-6">
-                    <div className="flex items-center mb-3">
+                  <div className="mb-4">
+                    <div className="flex items-center mb-2">
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Type de congés</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -439,8 +439,8 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
                   </div>
 
                   {/* Statut du congé */}
-                  <div className="mb-6">
-                    <div className="flex items-center mb-3">
+                  <div className="mb-4">
+                    <div className="flex items-center mb-2">
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Statut du congé</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -475,8 +475,8 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
                   </div>
 
                   {/* Période */}
-                  <div className="mb-6">
-                    <div className="flex items-center mb-3">
+                  <div className="mb-4">
+                    <div className="flex items-center mb-2">
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Période</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -502,7 +502,7 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
                   </div>
 
                   {/* Actions rapides */}
-                  <div className="mb-6">
+                  <div className="mb-4">
                     <div className="flex space-x-2">
                       <button
                         onClick={selectAllVisible}
@@ -522,14 +522,14 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
                   </div>
 
                   {/* Liste des congés disponibles */}
-                  <div className="mb-6">
+                  <div className="mb-4">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Congés disponibles</h4>
                       <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
                         {filteredLeaves.length} congé{filteredLeaves.length > 1 ? 's' : ''}
                       </span>
                     </div>
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
                       {filteredLeaves.length === 0 ? (
                         <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
                           Aucun congé trouvé avec les filtres sélectionnés
@@ -576,7 +576,7 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
                   {/* Vos congés sélectionnés */}
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Vos congés sélectionnés</h4>
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                    <div className="space-y-2 max-h-24 overflow-y-auto">
                       {selectedLeaveEntries.length === 0 ? (
                         <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
                           Aucun congé sélectionné

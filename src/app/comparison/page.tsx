@@ -6,6 +6,7 @@ import { LeaveEntry, AppSettings, PublicHoliday, CarryoverLeave } from '../../ty
 import { leaveStorage } from '../../utils/storage'
 import { calculateMonthlyLeaveSummarySeparated } from '../../utils/leaveUtils'
 import MainLayout from '../../components/MainLayout'
+import EmailReportModal from '../../components/EmailReportModal'
 
 export default function ComparisonPage() {
   const [leaves, setLeaves] = useState<LeaveEntry[]>([])
@@ -14,6 +15,7 @@ export default function ComparisonPage() {
   const [carryovers, setCarryovers] = useState<CarryoverLeave[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -110,6 +112,7 @@ export default function ComparisonPage() {
     <MainLayout
       onExport={handleExport}
       onImport={handleImport}
+      onEmail={() => setIsEmailModalOpen(true)}
     >
       <div className="space-y-8">
         <div className="card">
@@ -242,6 +245,14 @@ export default function ComparisonPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal d'envoi d'email */}
+      <EmailReportModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        leaves={leaves}
+        currentYear={currentYear}
+      />
     </MainLayout>
   )
 }

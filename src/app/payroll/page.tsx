@@ -6,12 +6,14 @@ import { LeaveEntry, PublicHoliday, PayrollData } from '../../types'
 import { leaveStorage } from '../../utils/storage'
 import PayrollValidation from '../../components/PayrollValidation'
 import MainLayout from '../../components/MainLayout'
+import EmailReportModal from '../../components/EmailReportModal'
 
 export default function PayrollPage() {
   const [leaves, setLeaves] = useState<LeaveEntry[]>([])
   const [holidays, setHolidays] = useState<PublicHoliday[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const currentMonth = new Date().getMonth() + 1
     return currentMonth === 1 ? 12 : currentMonth - 1
@@ -575,6 +577,7 @@ POSSIBLES CAUSES:
     <MainLayout
       onExport={handleExport}
       onImport={handleImport}
+      onEmail={() => setIsEmailModalOpen(true)}
     >
       {/* Header avec navigation */}
       <div className="mb-8">
@@ -1388,6 +1391,14 @@ POSSIBLES CAUSES:
           </div>
         </div>
       </div>
+
+      {/* Modal d'envoi d'email */}
+      <EmailReportModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        leaves={leaves}
+        currentYear={currentYear}
+      />
     </MainLayout>
   )
 }

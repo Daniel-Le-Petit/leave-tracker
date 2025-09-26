@@ -36,19 +36,25 @@ export default function Sidebar({ onExport, onImport, onEmail }: SidebarProps) {
       current: pathname === '/'
     },
     {
-      name: 'Calendrier des Congés',
+      name: 'Calendrier',
       href: '/calendar',
       icon: Calendar,
       current: pathname === '/calendar'
     },
     {
-      name: 'Validation feuille de paie',
+      name: 'Historique',
+      href: '/history',
+      icon: Clock,
+      current: pathname === '/history'
+    },
+    {
+      name: 'Validation Paie',
       href: '/payroll',
       icon: FileCheck,
       current: pathname === '/payroll'
     },
     {
-      name: 'Réel Vs Prévision',
+      name: 'Comparaison',
       href: '/comparison',
       icon: TrendingUp,
       current: pathname === '/comparison'
@@ -60,10 +66,10 @@ export default function Sidebar({ onExport, onImport, onEmail }: SidebarProps) {
       current: pathname === '/carryover'
     },
     {
-      name: 'Historique',
-      href: '/history',
-      icon: Clock,
-      current: pathname === '/history'
+      name: 'Vacation Report',
+      href: '/vacation-report',
+      icon: Mail,
+      current: pathname === '/vacation-report'
     },
     {
       name: 'Paramètres',
@@ -96,12 +102,6 @@ export default function Sidebar({ onExport, onImport, onEmail }: SidebarProps) {
         input.click()
       },
       color: 'text-blue-600 hover:text-blue-700'
-    },
-    {
-      name: 'Vacation Report',
-      icon: Mail,
-      onClick: onEmail,
-      color: 'text-purple-600 hover:text-purple-700'
     }
   ]
 

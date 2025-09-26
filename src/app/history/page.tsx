@@ -137,7 +137,9 @@ export default function HistoryPage() {
   }
 
   return (
-    <MainLayout>
+    <MainLayout
+      onEmail={() => setIsEmailModalOpen(true)}
+    >
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Historique des congés</h1>
         <p className="text-gray-600 dark:text-gray-400">Consultez et gérez tous vos congés</p>
@@ -391,6 +393,14 @@ export default function HistoryPage() {
           </div>
         </div>
       )}
+
+      {/* Modal d'envoi d'email */}
+      <EmailReportModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        leaves={leaves}
+        currentYear={new Date().getFullYear()}
+      />
     </MainLayout>
   )
 }
