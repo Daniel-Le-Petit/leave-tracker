@@ -42,16 +42,16 @@ export default function Sidebar({ onExport, onImport, onEmail }: SidebarProps) {
       current: pathname === '/calendar'
     },
     {
-      name: 'Historique',
-      href: '/history',
-      icon: Clock,
-      current: pathname === '/history'
-    },
-    {
       name: 'Validation Paie',
       href: '/payroll',
       icon: FileCheck,
       current: pathname === '/payroll'
+    },
+    {
+      name: 'Vacation Report',
+      href: '/vacation-report',
+      icon: Mail,
+      current: pathname === '/vacation-report'
     },
     {
       name: 'Comparaison',
@@ -66,10 +66,10 @@ export default function Sidebar({ onExport, onImport, onEmail }: SidebarProps) {
       current: pathname === '/carryover'
     },
     {
-      name: 'Vacation Report',
-      href: '/vacation-report',
-      icon: Mail,
-      current: pathname === '/vacation-report'
+      name: 'Historique',
+      href: '/history',
+      icon: Clock,
+      current: pathname === '/history'
     },
     {
       name: 'Paramètres',
