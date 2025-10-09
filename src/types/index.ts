@@ -1,6 +1,6 @@
 // Types pour le leave-tracker
 
-export type LeaveType = 'rtt' | 'cp' | 'cet' | 'pipe'
+export type LeaveType = 'rtt' | 'cp' | 'cet' | 'pipe' | 'sick'
 
 export interface LeaveEntry {
   id: string
@@ -19,19 +19,29 @@ export interface LeaveEntry {
 
 export interface AppSettings {
   darkMode: boolean
-  language: string
+  language?: string
   notifications: boolean
-  email: string
-  firstName: string
-  lastName: string
+  email?: string
+  firstName?: string
+  lastName?: string
+  firstDayOfWeek?: string
+  country?: string
+  publicHolidays?: string[]
+  quotas?: Array<{
+    type: LeaveType
+    yearlyQuota: number
+  }>
 }
 
 export interface LeaveBalance {
   type: LeaveType
-  initial: number
+  initial?: number
+  total: number
+  used: number
   taken: number
   remaining: number
   carryover?: number
+  year?: number
 }
 
 export interface PublicHoliday {
@@ -39,6 +49,21 @@ export interface PublicHoliday {
   date: string
   name: string
   year: number
+  country?: string
+}
+
+export interface CalendarDay {
+  date: Date
+  dayNumber?: number
+  isCurrentMonth?: boolean
+  isToday: boolean
+  isWeekend: boolean
+  isPublicHoliday?: boolean
+  isHoliday?: boolean
+  leaves?: LeaveEntry[]
+  leave?: any
+  holidayName?: string
+  suggestions?: string[]
 }
 
 export interface CarryoverLeave {
@@ -48,6 +73,7 @@ export interface CarryoverLeave {
   days: number
   description: string
   createdAt: string
+  updatedAt?: string
 }
 
 export interface PayrollData {
@@ -56,8 +82,10 @@ export interface PayrollData {
   year: number
   rttPrisDansMois: number
   cpPrisMoisPrecedent: string[]
+  cetPrisMoisPrecedent: string[]
   cpReliquat: number
   soldeCet: number
+  joursFeries: string[]
   createdAt: string
   updatedAt: string
 }

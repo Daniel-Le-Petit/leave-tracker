@@ -3,7 +3,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Calendar, CheckCircle, AlertTriangle, XCircle, Plus, Trash2, Edit3, Download, Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { PayrollData, type PayrollValidation, LeaveEntry } from '../types'
+import { PayrollData, LeaveEntry } from '../types'
+import type { PayrollValidation } from '../types/payroll'
 
 interface PayrollValidationProps {
   leaves: LeaveEntry[];

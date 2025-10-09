@@ -1,0 +1,16 @@
+=== LEAVE-TRACKER NON-REGRESSION TEST ===
+Test Date: ${new Date().toISOString()}
+Test Type: Package Migration (dexie → idb)
+Test Scope: Full Application
+
+TESTS TO PERFORM:
+1. Dependency Check
+2. TypeScript Compilation
+3. Build Process
+4. Linter Errors Check
+5. Critical Path Analysis
+6. Import/Export Verification
+7. Storage Operations Test
+
+Test Status: STARTING...
+

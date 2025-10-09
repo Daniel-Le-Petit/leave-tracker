@@ -6,8 +6,6 @@ services:
     buildCommand: npm install && npm run build
     staticPublishPath: ./out
     envVars:
-      - key: NODE_ENV
-        value: production
       - key: NEXT_PUBLIC_APP_NAME
         value: Leave Tracker
       - key: NEXT_PUBLIC_APP_VERSION
