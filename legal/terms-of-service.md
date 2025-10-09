@@ -84,3 +84,12 @@ En utilisant ce service, vous acceptez ces conditions d'utilisation.
 - Documentation : help.transcripteur-ia.fr
 
 **Dernière mise à jour** : [Date]
+
+
+
+
+
+
+
+
+

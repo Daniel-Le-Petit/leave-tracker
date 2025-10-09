@@ -270,3 +270,12 @@ class TranscriptionService {
 }
 
 export default TranscriptionService
+
+
+
+
+
+
+
+
+

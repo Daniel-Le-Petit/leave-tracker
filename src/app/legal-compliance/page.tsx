@@ -256,3 +256,12 @@ export default function LegalCompliancePage() {
     </div>
   )
 }
+
+
+
+
+
+
+
+
+

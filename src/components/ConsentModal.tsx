@@ -213,3 +213,12 @@ export default function ConsentModal({ isOpen, onClose, onConsent }: ConsentModa
     </div>
   )
 }
+
+
+
+
+
+
+
+
+

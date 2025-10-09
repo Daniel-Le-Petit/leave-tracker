@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import { LeaveEntry } from '../../types'
 import { leaveStorage } from '../../utils/storage'
 import MainLayout from '../../components/MainLayout'
+import EmailReportModal from '../../components/EmailReportModal'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
@@ -17,6 +18,7 @@ export default function VacationReportPage() {
   const [selectedLeaves, setSelectedLeaves] = useState<string[]>([])
   const [emailAddress, setEmailAddress] = useState('dlepetit.maa@gmail.com')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
 
   useEffect(() => {
     loadLeaves()
@@ -32,6 +34,18 @@ export default function VacationReportPage() {
       toast.error('Erreur lors du chargement des congés')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleLeaveUpdate = async (updatedLeave: LeaveEntry) => {
+    try {
+      await leaveStorage.updateLeave(updatedLeave)
+      setLeaves(prev => prev.map(leave => leave.id === updatedLeave.id ? updatedLeave : leave))
+      toast.success('Congé mis à jour avec succès')
+      await loadLeaves()
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du congé:', error)
+      toast.error('Erreur lors de la mise à jour du congé')
     }
   }
 
@@ -189,6 +203,7 @@ export default function VacationReportPage() {
     <MainLayout
       onExport={handleExport}
       onImport={handleImport}
+      onEmail={() => setIsEmailModalOpen(true)}
     >
       {/* Header avec titre et bouton d'envoi */}
       <div className="flex items-center justify-between mb-6">
@@ -353,11 +368,13 @@ export default function VacationReportPage() {
           <div className="p-6">
             <div className="space-y-4">
               <div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">À:</div>
+                <label htmlFor="email-address" className="text-sm text-gray-600 dark:text-gray-400">À:</label>
                 <input
+                  id="email-address"
                   type="email"
                   value={emailAddress}
                   onChange={(e) => setEmailAddress(e.target.value)}
+                  placeholder="Adresse email du destinataire"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
@@ -428,6 +445,15 @@ export default function VacationReportPage() {
           </div>
         </div>
       )}
+
+      {/* Modal d'envoi d'email */}
+      <EmailReportModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        leaves={leaves}
+        currentYear={currentYear}
+        onLeaveUpdate={handleLeaveUpdate}
+      />
     </MainLayout>
   )
 }

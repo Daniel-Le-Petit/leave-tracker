@@ -1,5 +1,5 @@
 # Port à utiliser
-$PORT = 3001
+$PORT = 3002
 
 # Vérifier si le port est utilisé
 $proc = Get-NetTCPConnection -LocalPort $PORT -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -13,7 +13,7 @@ if ($proc) {
     Write-Host "Port $PORT libre."
 }
 
-# Lancer npm run dev
-Write-Host "Lancement de npm run dev sur le port $PORT..."
+# Lancer npm start (React utilise 'start' et non 'dev')
+Write-Host "Lancement de npm start sur le port $PORT..."
 $env:PORT=$PORT
-npm run dev
+npm start

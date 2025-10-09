@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer Image Open Graph - RetraiteClair</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+        .preview {
+            width: 1200px;
+            height: 630px;
+            background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            margin: 0 auto;
+            border: 2px solid #333;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            z-index: 2;
+            position: relative;
+        }
+        .logo {
+            font-size: 72px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.4);
+            color: #ffffff;
+        }
+        .subtitle {
+            font-size: 32px;
+            margin-bottom: 25px;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+        .description {
+            font-size: 22px;
+            max-width: 900px;
+            line-height: 1.4;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        .icon {
+            font-size: 100px;
+            margin-bottom: 20px;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+        .highlight {
+            background: rgba(255,255,255,0.15);
+            padding: 12px 25px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 18px;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .decoration {
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+            z-index: 1;
+        }
+        .decoration:nth-child(2) {
+            bottom: -100px;
+            left: -100px;
+            width: 300px;
+            height: 300px;
+        }
+        .steps {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        <h2>🎯 Instructions pour créer l'image Open Graph LinkedIn :</h2>
+        <p><strong>Dimensions requises :</strong> 1200x630px exactement</p>
+        <p><strong>Format :</strong> PNG (pas SVG pour LinkedIn)</p>
+    </div>
+    
+    <div class="preview">
+        <div class="decoration"></div>
+        <div class="decoration"></div>
+        
+        <div class="container">
+            <div class="icon">🏖️</div>
+            <div class="logo">RetraiteClair</div>
+            <div class="subtitle">Simulateur Retraite Progressive Gratuit</div>
+            <div class="description">
+                Calculez votre retraite progressive en quelques clics.<br>
+                Guide complet, conseils d'experts et simulateur gratuit<br>
+                pour optimiser votre transition vers la retraite.
+            </div>
+            <div class="highlight">
+                ✨ Simulation Gratuite • Guide Complet • Conseils Experts
+            </div>
+        </div>
+    </div>
+    
+    <div class="steps">
+        <h3>📋 Étapes pour créer l'image :</h3>
+        <ol>
+            <li><strong>Capture d'écran :</strong> Faites une capture de l'image ci-dessus (1200x630px)</li>
+            <li><strong>Nom du fichier :</strong> Sauvegardez comme <code>og-image-linkedin.png</code></li>
+            <li><strong>Placement :</strong> Placez le fichier dans le dossier <code>public/</code></li>
+            <li><strong>Modification :</strong> Changez l'URL dans <code>index.html</code> vers <code>og-image-linkedin.png</code></li>
+            <li><strong>Déploiement :</strong> Redéployez le site</li>
+        </ol>
+    </div>
+</body>
+</html>
+
+
+

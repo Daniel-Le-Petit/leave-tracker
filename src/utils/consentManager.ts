@@ -185,3 +185,12 @@ class ConsentManager {
 }
 
 export default ConsentManager
+
+
+
+
+
+
+
+
+

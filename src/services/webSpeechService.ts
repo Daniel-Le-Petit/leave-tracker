@@ -248,3 +248,12 @@ class WebSpeechService {
 }
 
 export default WebSpeechService
+
+
+
+
+
+
+
+
+
