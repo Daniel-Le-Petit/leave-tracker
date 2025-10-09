@@ -81,12 +81,6 @@ export default function Sidebar({ onExport, onImport, onEmail }: SidebarProps) {
 
   const actionItems = [
     {
-      name: 'Email Report',
-      icon: Mail,
-      onClick: onEmail,
-      color: 'text-purple-600 hover:text-purple-700'
-    },
-    {
       name: 'Exporter',
       icon: Download,
       onClick: onExport,
