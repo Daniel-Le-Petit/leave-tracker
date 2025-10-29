@@ -4,7 +4,7 @@ services:
     env: static
     plan: free
     buildCommand: npm install && npm run build
-    staticPublishPath: ./out
+    staticPublishPath: out
     envVars:
       - key: NEXT_PUBLIC_APP_NAME
         value: Leave Tracker

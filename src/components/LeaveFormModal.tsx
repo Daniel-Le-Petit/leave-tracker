@@ -67,7 +67,12 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
         description: leave.description || ''
       });
     } else if (selectedDate) {
-      const dateStr = formatDateForDisplay(selectedDate.toISOString().split('T')[0]);
+      // Format date in local timezone to avoid timezone issues
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const localDateStr = `${year}-${month}-${day}`;
+      const dateStr = formatDateForDisplay(localDateStr);
       setFormData(prev => ({
         ...prev,
         startDate: dateStr,

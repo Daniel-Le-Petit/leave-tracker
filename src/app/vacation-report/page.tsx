@@ -57,6 +57,13 @@ export default function VacationReportPage() {
       })
     }
 
+    // Trier par date de début (du plus proche au plus éloigné)
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.startDate).getTime()
+      const dateB = new Date(b.startDate).getTime()
+      return dateA - dateB
+    })
+
     return filtered
   }, [leaves, currentYear, selectedTypes, dateFilter])
 

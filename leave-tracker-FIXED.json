@@ -1,0 +1,589 @@
+{
+  "leaves": [
+    {
+      "id": "1756450252606",
+      "type": "rtt",
+      "startDate": "2025-01-02",
+      "endDate": "2025-01-03",
+      "workingDays": 2,
+      "notes": "",
+      "isHalfDay": false,
+      "halfDayType": "morning",
+      "isForecast": false,
+      "createdAt": "2025-08-29T06:50:52.606Z",
+      "updatedAt": "2025-08-29T06:50:52.606Z"
+    },
+    {
+      "id": "1756450400001",
+      "type": "rtt",
+      "startDate": "2025-01-09",
+      "endDate": "2025-01-09",
+      "workingDays": 1,
+      "notes": "Vacances planifiées",
+      "isHalfDay": false,
+      "halfDayType": "morning",
+      "isForecast": false,
+      "createdAt": "2025-09-01T12:00:00.000Z",
+      "updatedAt": "2025-09-01T13:06:06.752Z"
+    },
+    {
+      "id": "1756450400005",
+      "type": "cet",
+      "startDate": "2025-05-02",
+      "endDate": "2025-05-06",
+      "workingDays": 3,
+      "notes": "",
+      "isHalfDay": false,
+      "halfDayType": "morning",
+      "isForecast": false,
+      "createdAt": "2025-09-01T12:04:00.000Z",
+      "updatedAt": "2025-09-01T14:13:40.084Z"
+    },
+    {
+      "id": "1756450400006",
+      "type": "rtt",
+      "startDate": "2025-05-07",
+      "endDate": "2025-05-13",
+      "workingDays": 4,
+      "notes": "",
+      "isHalfDay": false,
+      "isForecast": false,
+      "createdAt": "2025-09-01T12:00:00.000Z",
+      "updatedAt": "2025-09-01T12:00:00.000Z"
+    },
+    {
+      "id": "1756450400007",
+      "type": "rtt",
+      "startDate": "2025-07-03",
+      "endDate": "2025-07-08",
+      "workingDays": 4,
+      "notes": "",
+      "isHalfDay": false,
+      "isForecast": false,
+      "createdAt": "2025-09-01T12:00:00.000Z",
+      "updatedAt": "2025-09-01T12:00:00.000Z"
+    },
+    {
+      "id": "1756450400008",
+      "type": "cp",
+      "startDate": "2025-07-15",
+      "endDate": "2025-07-21",
+      "workingDays": 5,
+      "notes": "",
+      "isHalfDay": false,
+      "isForecast": false,
+      "createdAt": "2025-09-01T12:00:00.000Z",
+      "updatedAt": "2025-09-01T12:00:00.000Z"
+    },
+    {
+      "id": "1756450400009",
+      "type": "rtt",
+      "startDate": "2025-08-18",
+      "endDate": "2025-08-19",
+      "workingDays": 2,
+      "notes": "",
+      "isHalfDay": false,
+      "halfDayType": "morning",
+      "isForecast": false,
+      "createdAt": "2025-09-01T12:08:00.000Z",
+      "updatedAt": "2025-09-01T12:08:00.000Z"
+    },
+    {
+      "id": "1756450400010",
+      "type": "cp",
+      "startDate": "2025-08-20",
+      "endDate": "2025-08-26",
+      "workingDays": 5,
+      "notes": "",
+      "isHalfDay": false,
+      "halfDayType": "morning",
+      "isForecast": false,
+      "createdAt": "2025-09-01T12:09:00.000Z",
+      "updatedAt": "2025-09-01T13:59:29.329Z"
+    },
+    {
+      "id": "1756732011072",
+      "type": "rtt",
+      "startDate": "2025-01-13",
+      "endDate": "2025-01-14",
+      "workingDays": 2,
+      "notes": "",
+      "isHalfDay": false,
+      "halfDayType": "morning",
+      "isForecast": false,
+      "createdAt": "2025-09-01T13:06:51.072Z",
+      "updatedAt": "2025-09-01T13:06:51.072Z"
+    },
+    {
+      "id": "1756732022648",
+      "type": "rtt",
+      "startDate": "2025-01-17",
+      "endDate": "2025-01-17",
+      "workingDays": 1,
+      "notes": "",
+      "isHalfDay": false,
+      "halfDayType": "morning",
+      "isForecast": false,
+      "createdAt": "2025-09-01T13:07:02.648Z",
+      "updatedAt": "2025-09-01T13:07:02.648Z"
+    },
+    {
+      "id": "1756735284097",
+      "type": "cp",
+      "startDate": "2025-04-09",
+      "endDate": "2025-04-09",
+      "workingDays": 1,
+      "notes": "",
+      "isHalfDay": false,
+      "halfDayType": "morning",
+      "isForecast": false,
+      "createdAt": "2025-09-01T14:01:24.097Z",
+      "updatedAt": "2025-09-01T14:01:24.097Z"
+    },
+    {
+      "id": "1756735348400",
+      "type": "rtt",
+      "startDate": "2025-04-07",
+      "endDate": "2025-04-08",
+      "workingDays": 2,
+      "notes": "",
+      "isHalfDay": false,
+      "halfDayType": "morning",
+      "isForecast": false,
+      "createdAt": "2025-09-01T14:02:28.400Z",
+      "updatedAt": "2025-09-01T14:02:28.400Z"
+    },
+    {
+      "id": "1757304153075",
+      "type": "rtt",
+      "startDate": "2025-09-04",
+      "endDate": "2025-09-05",
+      "workingDays": 2,
+      "notes": "",
+      "isHalfDay": false,
+      "halfDayType": "morning",
+      "isForecast": false,
+      "createdAt": "2025-09-08T04:02:33.075Z",
+      "updatedAt": "2025-09-08T04:02:33.075Z"
+    },
+    {
+      "id": "1757304256289",
+      "type": "cp",
+      "startDate": "2025-09-08",
+      "endDate": "2025-09-08",
+      "workingDays": 1,
+      "notes": "",
+      "isHalfDay": false,
+      "halfDayType": "morning",
+      "isForecast": false,
+      "createdAt": "2025-09-08T04:04:16.289Z",
+      "updatedAt": "2025-09-08T04:04:16.289Z"
+    },
+    {
+      "id": "1757306608714",
+      "type": "cp",
+      "startDate": "2025-11-13",
+      "endDate": "2025-11-21",
+      "workingDays": 7,
+      "notes": "",
+      "isHalfDay": false,
+      "isForecast": true,
+      "createdAt": "2025-09-14T17:43:38.930Z",
+      "updatedAt": "2025-09-14T17:43:38.930Z"
+    },
+    {
+      "id": "1757307195231",
+      "type": "rtt",
+      "startDate": "2025-11-10",
+      "endDate": "2025-11-12",
+      "workingDays": 2,
+      "notes": "",
+      "isHalfDay": false,
+      "isForecast": true,
+      "createdAt": "2025-09-14T17:45:00.000Z",
+      "updatedAt": "2025-09-14T17:45:00.000Z"
+    },
+    {
+      "id": "1757520050978",
+      "type": "pipe",
+      "startDate": "2025-10-20",
+      "endDate": "2025-10-24",
+      "workingDays": 5,
+      "notes": "",
+      "isHalfDay": false,
+      "isForecast": false,
+      "createdAt": "2025-09-15T06:39:50.238Z",
+      "updatedAt": "2025-09-15T06:39:50.238Z"
+    },
+    {
+      "id": "1757599473504",
+      "type": "rtt",
+      "startDate": "2026-03-22",
+      "endDate": "2026-03-28",
+      "workingDays": 5,
+      "notes": "",
+      "isHalfDay": false,
+      "isForecast": true,
+      "createdAt": "2025-09-11T14:04:33.504Z",
+      "updatedAt": "2025-09-11T14:04:33.504Z"
+    },
+    {
+      "id": "1757605055023",
+      "type": "rtt",
+      "startDate": "2025-03-26",
+      "endDate": "2025-03-26",
+      "workingDays": 1,
+      "notes": "",
+      "isHalfDay": false,
+      "isForecast": false,
+      "createdAt": "2025-09-17T08:33:38.575Z",
+      "updatedAt": "2025-09-17T08:33:38.575Z"
+    },
+    {
+      "id": "1757873455116",
+      "type": "cp",
+      "startDate": "2025-12-26",
+      "endDate": "2025-12-30",
+      "workingDays": 3,
+      "notes": "",
+      "isHalfDay": false,
+      "isForecast": true,
+      "createdAt": "2025-09-14T18:10:55.116Z",
+      "updatedAt": "2025-09-15T06:38:32.985Z"
+    },
+    {
+      "id": "1757918326766",
+      "type": "cp",
+      "startDate": "2025-12-31",
+      "endDate": "2026-01-01",
+      "workingDays": 2,
+      "notes": "",
+      "isHalfDay": false,
+      "isForecast": true,
+      "createdAt": "2025-09-15T06:38:46.766Z",
+      "updatedAt": "2025-09-15T06:40:23.921Z"
+    },
+    {
+      "id": "1758097992072",
+      "type": "rtt",
+      "startDate": "2025-05-15",
+      "endDate": "2025-05-16",
+      "workingDays": 2,
+      "notes": "",
+      "isHalfDay": false,
+      "isForecast": false,
+      "createdAt": "2025-09-17T08:33:12.073Z",
+      "updatedAt": "2025-09-17T08:33:12.073Z"
+    },
+    {
+      "id": "1758098029862",
+      "type": "rtt",
+      "startDate": "2025-03-28",
+      "endDate": "2025-03-28",
+      "workingDays": 1,
+      "notes": "",
+      "isHalfDay": false,
+      "isForecast": false,
+      "createdAt": "2025-09-17T08:33:49.862Z",
+      "updatedAt": "2025-09-17T08:33:49.862Z"
+    },
+    {
+      "id": "1758206831250",
+      "type": "cet",
+      "startDate": "2025-04-24",
+      "endDate": "2025-04-25",
+      "workingDays": 2,
+      "notes": "",
+      "isHalfDay": false,
+      "isForecast": false,
+      "createdAt": "2025-09-17T10:00:00.000Z",
+      "updatedAt": "2025-09-17T10:00:00.000Z"
+    },
+    {
+      "id": "1758624003667",
+      "type": "rtt",
+      "startDate": "2024-12-30",
+      "endDate": "2024-12-31",
+      "workingDays": 2,
+      "notes": "",
+      "isHalfDay": false,
+      "isForecast": false,
+      "createdAt": "2025-09-18T10:00:00.000Z",
+      "updatedAt": "2025-09-18T10:00:00.000Z"
+    }
+  ],
+  "settings": {
+    "id": "app-settings",
+    "firstDayOfWeek": "monday",
+    "country": "FR",
+    "publicHolidays": [],
+    "quotas": [
+      {
+        "type": "cp",
+        "yearlyQuota": 27
+      },
+      {
+        "type": "rtt",
+        "yearlyQuota": 23
+      },
+      {
+        "type": "sick",
+        "yearlyQuota": 0
+      }
+    ],
+    "darkMode": true,
+    "notifications": true
+  },
+  "holidays": [],
+  "carryovers": [
+    {
+      "id": "1756450293317",
+      "type": "cp",
+      "year": 2024,
+      "days": 43.5,
+      "description": "",
+      "createdAt": "2025-08-29T06:51:33.317Z",
+      "updatedAt": "2025-09-17T14:28:54.770Z"
+    },
+    {
+      "id": "1756450321132",
+      "type": "rtt",
+      "year": 2024,
+      "days": 7,
+      "description": "",
+      "createdAt": "2025-08-29T06:52:01.132Z",
+      "updatedAt": "2025-09-12T08:48:12.767Z"
+    },
+    {
+      "id": "1756450331596",
+      "type": "cet",
+      "year": 2024,
+      "days": 5,
+      "description": "",
+      "createdAt": "2025-08-29T06:52:11.596Z",
+      "updatedAt": "2025-08-29T06:52:11.596Z"
+    }
+  ],
+  "payrollData": {
+    "2025-08": {
+      "id": "payroll-2025-08",
+      "month": 8,
+      "year": 2025,
+      "cpReliquat": 64.5,
+      "rttPrisDansMois": 4,
+      "soldeCet": 0,
+      "cpPrisMoisPrecedent": [
+        "15/07/2025",
+        "16/07/2025",
+        "17/07/2025",
+        "18/07/2025",
+        "21/07/2025"
+      ],
+      "cetPrisMoisPrecedent": [],
+      "joursFeries": [],
+      "createdAt": "2025-09-01T00:00:00.000Z",
+      "updatedAt": "2025-09-23T15:28:12.392Z"
+    },
+    "2025-09": {
+      "id": "payroll-2025-09",
+      "month": 9,
+      "year": 2025,
+      "cpReliquat": 59.5,
+      "rttPrisDansMois": 2,
+      "soldeCet": 0,
+      "cpPrisMoisPrecedent": [
+        "20/08/2025",
+        "21/08/2025",
+        "22/08/2025",
+        "25/08/2025",
+        "26/08/2025"
+      ],
+      "cetPrisMoisPrecedent": [],
+      "joursFeries": [],
+      "createdAt": "2025-09-01T00:00:00.000Z",
+      "updatedAt": "2025-09-23T15:28:12.392Z"
+    },
+    "2025-07": {
+      "id": "payroll-2025-07",
+      "month": 7,
+      "year": 2025,
+      "cpReliquat": 69.5,
+      "rttPrisDansMois": 0,
+      "soldeCet": 0,
+      "cpPrisMoisPrecedent": [],
+      "cetPrisMoisPrecedent": [],
+      "joursFeries": [],
+      "createdAt": "2025-07-01T00:00:00.000Z",
+      "updatedAt": "2025-09-23T15:28:12.392Z"
+    },
+    "2025-06": {
+      "id": "payroll-2025-06",
+      "month": 6,
+      "year": 2025,
+      "cpReliquat": 69.5,
+      "rttPrisDansMois": 6,
+      "soldeCet": 0,
+      "cpPrisMoisPrecedent": [],
+      "cetPrisMoisPrecedent": [
+        "02/05/2025",
+        "05/05/2025",
+        "06/05/2025"
+      ],
+      "joursFeries": [],
+      "createdAt": "2025-06-01T00:00:00.000Z",
+      "updatedAt": "2025-09-23T15:28:12.392Z"
+    },
+    "2025-05": {
+      "id": "payroll-2025-05",
+      "month": 5,
+      "year": 2025,
+      "cpReliquat": 42.5,
+      "rttPrisDansMois": 2,
+      "soldeCet": 3,
+      "cpPrisMoisPrecedent": [
+        "09/04/2025"
+      ],
+      "cetPrisMoisPrecedent": [
+        "24/04/2025",
+        "25/04/2025"
+      ],
+      "joursFeries": [],
+      "createdAt": "2025-05-01T00:00:00.000Z",
+      "updatedAt": "2025-09-23T15:28:12.392Z"
+    },
+    "2025-04": {
+      "id": "payroll-2025-04",
+      "month": 4,
+      "year": 2025,
+      "cpReliquat": 43.5,
+      "rttPrisDansMois": 2,
+      "soldeCet": 5,
+      "cpPrisMoisPrecedent": [],
+      "cetPrisMoisPrecedent": [],
+      "joursFeries": [],
+      "createdAt": "2025-04-01T00:00:00.000Z",
+      "updatedAt": "2025-09-23T15:28:12.392Z"
+    },
+    "2025-03": {
+      "id": "payroll-2025-03",
+      "month": 3,
+      "year": 2025,
+      "cpReliquat": 43.5,
+      "rttPrisDansMois": 0,
+      "soldeCet": 5,
+      "cpPrisMoisPrecedent": [],
+      "cetPrisMoisPrecedent": [],
+      "joursFeries": [],
+      "createdAt": "2025-03-01T00:00:00.000Z",
+      "updatedAt": "2025-09-23T15:28:12.392Z"
+    },
+    "2025-02": {
+      "id": "payroll-2025-02",
+      "month": 2,
+      "year": 2025,
+      "cpReliquat": 43.5,
+      "rttPrisDansMois": 6,
+      "soldeCet": 5,
+      "cpPrisMoisPrecedent": [],
+      "cetPrisMoisPrecedent": [],
+      "joursFeries": [],
+      "createdAt": "2025-02-01T00:00:00.000Z",
+      "updatedAt": "2025-09-23T15:28:12.392Z"
+    },
+    "2025-01": {
+      "id": "payroll-2025-01",
+      "month": 1,
+      "year": 2025,
+      "cpReliquat": 43.5,
+      "rttPrisDansMois": 2,
+      "soldeCet": 5,
+      "cpPrisMoisPrecedent": [],
+      "cetPrisMoisPrecedent": [],
+      "joursFeries": [],
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "updatedAt": "2025-09-23T15:28:12.392Z"
+    },
+    "2024-12": {
+      "id": "payroll-2024-12",
+      "month": 12,
+      "year": 2024,
+      "cpReliquat": 43.5,
+      "rttPrisDansMois": 0,
+      "soldeCet": 5,
+      "cpPrisMoisPrecedent": [],
+      "cetPrisMoisPrecedent": [],
+      "joursFeries": [],
+      "createdAt": "2024-12-01T00:00:00.000Z",
+      "updatedAt": "2025-09-23T15:28:12.392Z"
+    },
+    "2024-08": {
+      "id": "payroll-2024-08",
+      "month": 8,
+      "year": 2024,
+      "cpReliquat": 47.5,
+      "rttPrisDansMois": 0,
+      "soldeCet": 5,
+      "cpPrisMoisPrecedent": [],
+      "cetPrisMoisPrecedent": [],
+      "joursFeries": [],
+      "createdAt": "2024-08-01T00:00:00.000Z",
+      "updatedAt": "2025-09-23T15:28:12.392Z"
+    },
+    "2024-07": {
+      "id": "payroll-2024-07",
+      "month": 7,
+      "year": 2024,
+      "cpReliquat": 47.5,
+      "rttPrisDansMois": 0,
+      "soldeCet": 5,
+      "cpPrisMoisPrecedent": [],
+      "cetPrisMoisPrecedent": [],
+      "joursFeries": [],
+      "createdAt": "2024-07-01T00:00:00.000Z",
+      "updatedAt": "2025-09-23T15:28:12.392Z"
+    },
+    "2024-06": {
+      "id": "payroll-2024-06",
+      "month": 6,
+      "year": 2024,
+      "cpReliquat": 47.5,
+      "rttPrisDansMois": 0,
+      "soldeCet": 5,
+      "cpPrisMoisPrecedent": [],
+      "cetPrisMoisPrecedent": [],
+      "joursFeries": [],
+      "createdAt": "2024-06-01T00:00:00.000Z",
+      "updatedAt": "2025-09-23T15:28:12.392Z"
+    },
+    "2024-05": {
+      "id": "payroll-2024-05",
+      "month": 5,
+      "year": 2024,
+      "cpReliquat": 47.5,
+      "rttPrisDansMois": 0,
+      "soldeCet": 5,
+      "cpPrisMoisPrecedent": [],
+      "cetPrisMoisPrecedent": [],
+      "joursFeries": [],
+      "createdAt": "2024-05-01T00:00:00.000Z",
+      "updatedAt": "2025-09-23T15:28:12.392Z"
+    },
+    "2024-04": {
+      "id": "payroll-2024-04",
+      "month": 4,
+      "year": 2024,
+      "cpReliquat": 47.5,
+      "rttPrisDansMois": 0,
+      "soldeCet": 5,
+      "cpPrisMoisPrecedent": [],
+      "cetPrisMoisPrecedent": [],
+      "joursFeries": [],
+      "createdAt": "2024-04-01T00:00:00.000Z",
+      "updatedAt": "2025-09-23T15:28:12.392Z"
+    }
+  },
+  "exportDate": "2025-09-23T15:28:12.392Z",
+  "version": "1.1"
+}
+
+

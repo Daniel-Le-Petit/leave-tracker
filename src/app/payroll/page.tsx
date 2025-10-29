@@ -75,22 +75,37 @@ export default function PayrollPage() {
   
   // Fonction pour sauvegarder les données du mois actuel
   const saveCurrentMonthData = (showToast = true) => {
+    // Normaliser les dates avant la sauvegarde
+    const normalizedCpPris = (payrollData.cpPrisMoisPrecedent || [])
+      .filter(date => date.trim() !== '')
+      .map(normalizeDate)
+    
+    const normalizedCetPris = (payrollData.cetPrisMoisPrecedent || [])
+      .filter(date => date.trim() !== '')
+      .map(normalizeDate)
+    
+    const dataToSave = {
+      ...payrollData,
+      cpPrisMoisPrecedent: normalizedCpPris,
+      cetPrisMoisPrecedent: normalizedCetPris
+    }
+    
     // Vérifier s'il y a des données à sauvegarder
-    const hasData = (payrollData.cpReliquat !== undefined) ||
-                   (payrollData.rttPrisDansMois !== undefined) ||
-                   (payrollData.soldeCet !== undefined) ||
-                   (payrollData.cpPrisMoisPrecedent && payrollData.cpPrisMoisPrecedent.filter(date => date.trim() !== '').length > 0) ||
-                   (payrollData.cetPrisMoisPrecedent && payrollData.cetPrisMoisPrecedent.filter(date => date.trim() !== '').length > 0)
+    const hasData = (dataToSave.cpReliquat !== undefined) ||
+                   (dataToSave.rttPrisDansMois !== undefined) ||
+                   (dataToSave.soldeCet !== undefined) ||
+                   (normalizedCpPris.length > 0) ||
+                   (normalizedCetPris.length > 0)
     
     // Ne sauvegarder que s'il y a des données réelles
     if (!hasData) {
       return // Sortir sans sauvegarder ni afficher de message
     }
     
-    const key = getMonthYearKey(payrollData.month || selectedMonth, payrollData.year || currentYear)
+    const key = getMonthYearKey(dataToSave.month || selectedMonth, dataToSave.year || currentYear)
     const newData = {
       ...payrollDataByMonth,
-      [key]: { ...payrollData }
+      [key]: dataToSave
     }
     setPayrollDataByMonth(newData)
     savePayrollDataToStorage(newData)
@@ -103,13 +118,44 @@ export default function PayrollPage() {
   // Auto-sauvegarde désactivée - seule la sauvegarde manuelle est autorisée
   // useEffect supprimé pour éviter toute sauvegarde automatique
 
+  // Fonction pour normaliser les dates au format YYYY-MM-DD
+  const normalizeDate = (dateStr: string): string => {
+    if (!dateStr || !dateStr.trim()) return ''
+    
+    const trimmed = dateStr.trim()
+    
+    // Gérer différents formats de dates
+    if (trimmed.includes('/')) {
+      // Format DD/MM/YYYY
+      const parts = trimmed.split('/')
+      if (parts.length === 3) {
+        const [day, month, year] = parts
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+      }
+    } else if (trimmed.includes('-')) {
+      const parts = trimmed.split('-')
+      if (parts.length === 3) {
+        // Si le premier élément fait 2 caractères ou moins, c'est DD-MM-YYYY
+        if (parts[0].length <= 2) {
+          const [day, month, year] = parts
+          return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+        }
+        // Sinon, c'est déjà YYYY-MM-DD
+        return trimmed
+      }
+    }
+    
+    // Format non reconnu
+    return trimmed
+  }
+
   // Fonction pour valider les données saisies
   const validatePayrollData = () => {
     const errors = []
     const warnings = []
 
     // Vérifications obligatoires
-    if (!payrollData.cpReliquat || payrollData.cpReliquat < 0) {
+    if (payrollData.cpReliquat === undefined || payrollData.cpReliquat < 0) {
       errors.push('Le reliquat CP doit être un nombre positif')
     }
 
@@ -122,29 +168,35 @@ export default function PayrollPage() {
     }
 
     // Vérifications de cohérence
-    if (payrollData.cpReliquat && payrollData.cpReliquat > 50) {
+    if (payrollData.cpReliquat !== undefined && payrollData.cpReliquat > 50) {
       warnings.push('Le reliquat CP semble élevé (> 50 jours)')
     }
 
-    if (payrollData.rttPrisDansMois && payrollData.rttPrisDansMois > 10) {
+    if (payrollData.rttPrisDansMois !== undefined && payrollData.rttPrisDansMois > 10) {
       warnings.push('Le nombre de RTT pris semble élevé (> 10 jours)')
     }
 
-    // Vérifier les dates CP
-    const cpDates = payrollData.cpPrisMoisPrecedent || []
-    const cetDates = payrollData.cetPrisMoisPrecedent || []
+    // Normaliser et vérifier les dates CP
+    const cpDates = (payrollData.cpPrisMoisPrecedent || [])
+      .filter(date => date.trim() !== '')
+      .map(normalizeDate)
     
     if (cpDates.length > 0) {
       const invalidDates = cpDates.filter(date => !date.match(/^\d{4}-\d{2}-\d{2}$/))
       if (invalidDates.length > 0) {
-        errors.push('Format de date invalide dans les CP pris')
+        errors.push(`Format de date invalide dans les CP pris: ${invalidDates.join(', ')}`)
       }
     }
 
+    // Normaliser et vérifier les dates CET
+    const cetDates = (payrollData.cetPrisMoisPrecedent || [])
+      .filter(date => date.trim() !== '')
+      .map(normalizeDate)
+    
     if (cetDates.length > 0) {
       const invalidDates = cetDates.filter(date => !date.match(/^\d{4}-\d{2}-\d{2}$/))
       if (invalidDates.length > 0) {
-        errors.push('Format de date invalide dans les CET pris')
+        errors.push(`Format de date invalide dans les CET pris: ${invalidDates.join(', ')}`)
       }
     }
 
@@ -797,7 +849,16 @@ POSSIBLES CAUSES:
             <input 
               type="number" 
               value={payrollData.rttPrisDansMois !== undefined ? payrollData.rttPrisDansMois : ''}
-              onChange={(e) => setPayrollData({...payrollData, rttPrisDansMois: e.target.value ? parseInt(e.target.value) : undefined})}
+              onChange={(e) => {
+                const value = e.target.value
+                // Permettre les valeurs 0 en vérifiant si la chaîne n'est pas vide plutôt que sa valeur truthy
+                if (value === '') {
+                  setPayrollData({...payrollData, rttPrisDansMois: undefined})
+                } else {
+                  const numValue = parseInt(value, 10)
+                  setPayrollData({...payrollData, rttPrisDansMois: isNaN(numValue) ? undefined : numValue})
+                }
+              }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="Ex: 4"
             />
@@ -812,6 +873,12 @@ POSSIBLES CAUSES:
               rows={4}
               value={(payrollData.cpPrisMoisPrecedent || []).join('\n')}
               onChange={(e) => {
+                // Garder toutes les lignes (y compris les lignes vides) pour permettre le retour à la ligne
+                const lines = e.target.value.split('\n')
+                setPayrollData({...payrollData, cpPrisMoisPrecedent: lines})
+              }}
+              onBlur={(e) => {
+                // Nettoyer les lignes vides seulement lors de la perte de focus
                 const lines = e.target.value.split('\n').filter(line => line.trim() !== '')
                 setPayrollData({...payrollData, cpPrisMoisPrecedent: lines})
               }}
@@ -831,6 +898,12 @@ POSSIBLES CAUSES:
               rows={4}
               value={(payrollData.cetPrisMoisPrecedent || []).join('\n')}
               onChange={(e) => {
+                // Garder toutes les lignes (y compris les lignes vides) pour permettre le retour à la ligne
+                const lines = e.target.value.split('\n')
+                setPayrollData({...payrollData, cetPrisMoisPrecedent: lines})
+              }}
+              onBlur={(e) => {
+                // Nettoyer les lignes vides seulement lors de la perte de focus
                 const lines = e.target.value.split('\n').filter(line => line.trim() !== '')
                 setPayrollData({...payrollData, cetPrisMoisPrecedent: lines})
               }}
@@ -849,7 +922,16 @@ POSSIBLES CAUSES:
             <input 
               type="number" 
               value={payrollData.soldeCet !== undefined ? payrollData.soldeCet : ''}
-              onChange={(e) => setPayrollData({...payrollData, soldeCet: e.target.value ? parseInt(e.target.value) : undefined})}
+              onChange={(e) => {
+                const value = e.target.value
+                // Permettre les valeurs 0 en vérifiant si la chaîne n'est pas vide plutôt que sa valeur truthy
+                if (value === '') {
+                  setPayrollData({...payrollData, soldeCet: undefined})
+                } else {
+                  const numValue = parseInt(value, 10)
+                  setPayrollData({...payrollData, soldeCet: isNaN(numValue) ? undefined : numValue})
+                }
+              }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="Ex: 5"
             />
