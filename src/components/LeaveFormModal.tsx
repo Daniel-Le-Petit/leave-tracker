@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, Save, Trash2, Edit3 } from 'lucide-react';
 import DateInputWithHelpers from './DateInputWithHelpers';
-import { LEAVE_TYPES, getHolidaysForYear } from '../utils/leaveUtils';
+import { LEAVE_TYPES, getHolidaysForYear, formatWorkingDays } from '../utils/leaveUtils';
 
 interface LeaveFormModalProps {
   isOpen: boolean;
@@ -28,7 +28,7 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
     type: 'cp',
     startDate: '',
     endDate: '',
-    workingDays: 1,
+    workingDays: 1.0,
     isForecast: false,
     description: ''
   });
@@ -62,7 +62,7 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
         type: leave.type || 'cp',
         startDate: formatDateForDisplay(leave.startDate || ''),
         endDate: formatDateForDisplay(leave.endDate || ''),
-        workingDays: leave.workingDays || 1,
+        workingDays: leave.workingDays || 1.0,
         isForecast: leave.isForecast || false,
         description: leave.description || ''
       });
@@ -115,8 +115,8 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
         new Date(parseDateFromDisplay(formData.startDate)) > new Date(parseDateFromDisplay(formData.endDate))) {
       newErrors.endDate = 'La date de fin doit être après la date de début';
     }
-    if (formData.workingDays < 1) {
-      newErrors.workingDays = 'Au moins 1 jour requis';
+    if (formData.workingDays < 0.5) {
+      newErrors.workingDays = 'Au moins 0.5 jour (1/2 journée) requis';
     }
 
     setErrors(newErrors);
@@ -195,7 +195,7 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
           <div className="flex items-center space-x-2">
             {leave ? (
               <>
-                <Edit3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <Edit3 className="h-5 w-5 text-green-600 dark:text-green-400" />
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Modifier le congé
                 </h3>
@@ -233,7 +233,7 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
                   onClick={() => setFormData(prev => ({ ...prev, type: type.value }))}
                   className={`p-3 rounded-lg border-2 transition-all ${
                     formData.type === type.value
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
                       : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
                   }`}
                 >
@@ -282,11 +282,19 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
             <div className="flex items-center space-x-2">
               <input
                 type="number"
-                min="1"
+                min="0.5"
+                step="0.5"
                 value={formData.workingDays}
-                onChange={(e) => setFormData(prev => ({ ...prev, workingDays: Number(e.target.value) }))}
-                placeholder="Nombre de jours"
-                title="Nombre de jours ouvrés"
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value);
+                  if (!isNaN(value) && value >= 0.5) {
+                    setFormData(prev => ({ ...prev, workingDays: value }));
+                  } else if (e.target.value === '' || e.target.value === '0') {
+                    setFormData(prev => ({ ...prev, workingDays: 0.5 }));
+                  }
+                }}
+                placeholder="0.5, 1, 1.5, 2..."
+                title="Nombre de jours ouvrés (0.5 = 1/2 journée, 1.5 = 1 jour et demi, etc.)"
                 className={`flex-1 px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
                   errors.workingDays ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
@@ -301,11 +309,11 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Calcul automatique exclut les week-ends et jours fériés
+              Calcul automatique exclut les week-ends et jours fériés. Vous pouvez saisir 0.5 (1/2 journée), 1.5 (1 jour et demi), etc.
             </p>
             {formData.startDate && formData.endDate && (
-              <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                💡 Période: {formData.startDate} au {formData.endDate} = {formData.workingDays} jour(s) ouvré(s)
+              <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                💡 Période: {formData.startDate} au {formData.endDate} = {formatWorkingDays(formData.workingDays)}
               </div>
             )}
             {errors.workingDays && (
@@ -320,7 +328,7 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
                 type="checkbox"
                 checked={formData.isForecast}
                 onChange={(e) => setFormData(prev => ({ ...prev, isForecast: e.target.checked }))}
-                className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                className="rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500"
               />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Prévision (pas encore pris)
@@ -366,7 +374,7 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
               </button>
               <button
                 type="submit"
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 <Save className="h-4 w-4" />
                 <span>{leave ? 'Modifier' : 'Créer'}</span>

@@ -23,44 +23,84 @@ export default function DateInputWithHelpers({
   const [isFocused, setIsFocused] = useState(false)
 
   // Convertir la valeur en date pour les calculs
-  const getDateValue = () => {
+  const getDateValue = (): Date => {
     if (!value) return new Date()
     try {
       // Essayer de parser la date au format DD/MM/YYYY
       const parts = value.split('/')
       if (parts.length === 3) {
-        const day = parseInt(parts[0])
-        const month = parseInt(parts[1]) - 1 // Les mois commencent à 0
-        const year = parseInt(parts[2])
+        const day = parseInt(parts[0], 10)
+        const month = parseInt(parts[1], 10) - 1 // Les mois commencent à 0
+        const year = parseInt(parts[2], 10)
+        
+        // Vérifier que les valeurs sont valides
+        if (isNaN(day) || isNaN(month) || isNaN(year)) {
+          return new Date()
+        }
+        
         const date = new Date(year, month, day)
         // Vérifier que la date est valide
-        if (date.getFullYear() === year && date.getMonth() === month && date.getDate() === day) {
+        if (!isNaN(date.getTime()) && 
+            date.getFullYear() === year && 
+            date.getMonth() === month && 
+            date.getDate() === day) {
           return date
         }
       }
       // Fallback: essayer de parser comme ISO
-      return parseISO(value)
+      const isoDate = parseISO(value)
+      if (!isNaN(isoDate.getTime())) {
+        return isoDate
+      }
     } catch {
-      return new Date()
+      // En cas d'erreur, retourner la date du jour
     }
+    return new Date()
   }
 
   // Formater la date pour l'affichage
   const formatDateForDisplay = (date: Date) => {
-    return format(date, 'dd/MM/yyyy')
+    // Vérifier que la date est valide
+    if (!date || isNaN(date.getTime())) {
+      return ''
+    }
+    try {
+      return format(date, 'dd/MM/yyyy', { locale: fr })
+    } catch {
+      return ''
+    }
   }
 
   // Convertir la date en format DD/MM/YYYY pour le stockage
   const formatDateForStorage = (date: Date) => {
-    return format(date, 'dd/MM/yyyy')
+    // Vérifier que la date est valide
+    if (!date || isNaN(date.getTime())) {
+      return ''
+    }
+    try {
+      return format(date, 'dd/MM/yyyy', { locale: fr })
+    } catch {
+      return ''
+    }
   }
 
   const handleDateChange = (newDate: Date) => {
-    onChange(formatDateForStorage(newDate))
+    // Vérifier que la date est valide avant de la formater
+    if (!newDate || isNaN(newDate.getTime())) {
+      return
+    }
+    const formatted = formatDateForStorage(newDate)
+    if (formatted) {
+      onChange(formatted)
+    }
   }
 
   const handlePreviousDay = () => {
     const currentDate = getDateValue()
+    // Vérifier que la date est valide avant d'ajouter des jours
+    if (!currentDate || isNaN(currentDate.getTime())) {
+      return
+    }
     const newDate = addDays(currentDate, -1)
     console.log('Previous day:', currentDate, '->', newDate)
     handleDateChange(newDate)
@@ -68,6 +108,10 @@ export default function DateInputWithHelpers({
 
   const handleNextDay = () => {
     const currentDate = getDateValue()
+    // Vérifier que la date est valide avant d'ajouter des jours
+    if (!currentDate || isNaN(currentDate.getTime())) {
+      return
+    }
     const newDate = addDays(currentDate, 1)
     console.log('Next day:', currentDate, '->', newDate)
     handleDateChange(newDate)
@@ -124,11 +168,15 @@ export default function DateInputWithHelpers({
       )}
 
       {/* Affichage de la date formatée quand l'input est focusé */}
-      {isFocused && value && (
-        <div className="text-xs text-blue-600 dark:text-blue-400">
-          {formatDateForDisplay(getDateValue())}
-        </div>
-      )}
+      {isFocused && value && (() => {
+        const dateValue = getDateValue()
+        const formatted = formatDateForDisplay(dateValue)
+        return formatted ? (
+          <div className="text-xs text-blue-600 dark:text-blue-400">
+            {formatted}
+          </div>
+        ) : null
+      })()}
     </div>
   )
 }

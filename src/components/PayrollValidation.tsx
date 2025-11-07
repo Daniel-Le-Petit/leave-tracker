@@ -103,15 +103,16 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
     // Calcul du reliquat CP attendu (reliquat à la FIN du mois précédent = début du mois en cours)
     // Le reliquat CP dans la feuille de paie correspond au reliquat à la FIN du mois précédent
     // Utiliser la même logique que le calendrier, mais pour le MOIS PRÉCÉDENT
-    const previousMonth = month === 1 ? 12 : month - 1
-    const previousYear = month === 1 ? year - 1 : year
+    // Note: previousMonth et previousYear sont déjà déclarés plus haut
     
     // Calculer les CP/CET pris depuis le début de l'année jusqu'à la fin du mois précédent (excluant le mois en cours)
+    // Convertir previousMonth de base 1 (1-12) vers base 0 (0-11) pour la comparaison avec getMonth()
+    const previousMonthZeroBased = previousMonth - 1 // Convertir de base 1 à base 0
     let cumulativeCP = 0
     
     // Parcourir tous les mois jusqu'au mois précédent inclus
-    for (let m = 0; m <= previousMonth; m++) {
-      const checkYear = m === 0 && previousMonth === 11 ? previousYear - 1 : previousYear
+    for (let m = 0; m <= previousMonthZeroBased; m++) {
+      const checkYear = previousYear
       
       // Filtrer les congés qui sont dans ce mois
       const monthLeaves = leaves.filter(leave => {
@@ -126,6 +127,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
     }
     
     // Calculer le reliquat CP selon la même logique que le calendrier (utiliser les mêmes valeurs)
+    // Utiliser previousMonthZeroBased pour la comparaison car le calendrier utilise la base 0
     let cpReliquatAttendu = 0
     
     if (previousYear === 2025) {
@@ -133,8 +135,8 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
       const cpQuota2025 = 27 // Ajouté au 31/05
       
       // CP : reliquat seulement jusqu'en avril, puis + quota au 31/05
-      // previousMonth est en base 0 (0=janvier, 3=avril), donc < 4 signifie jusqu'en avril inclus
-      if (previousMonth < 4) { // Janvier à Avril (0-3)
+      // previousMonthZeroBased est en base 0 (0=janvier, 3=avril), donc < 4 signifie jusqu'en avril inclus
+      if (previousMonthZeroBased < 4) { // Janvier à Avril (0-3)
         cpReliquatAttendu = Math.max(0, cpReliquat2024 - cumulativeCP)
       } else { // Mai et après (4+)
         cpReliquatAttendu = Math.max(0, cpReliquat2024 + cpQuota2025 - cumulativeCP)
@@ -143,7 +145,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
       const cpReliquat2025 = 48.5 // CP restant de 2025 (43.5 + 27 - 22 pris)
       const cpQuota2026 = 27 // Ajouté au 31/05
       
-      if (previousMonth < 4) { // Janvier à Avril (0-3)
+      if (previousMonthZeroBased < 4) { // Janvier à Avril (0-3)
         cpReliquatAttendu = Math.max(0, cpReliquat2025 - cumulativeCP)
       } else { // Mai et après (4+)
         cpReliquatAttendu = Math.max(0, cpReliquat2025 + cpQuota2026 - cumulativeCP)
@@ -479,7 +481,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
               <div className="flex items-center space-x-2 mt-3">
                 <button
                   onClick={() => openModal()}
-                  className="flex items-center space-x-1 px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+                  className="flex items-center space-x-1 px-3 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
                   title="Ajouter des données de feuille de paie"
                 >
                   <Plus className="w-3 h-3" />
@@ -522,15 +524,15 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => setCurrentYear(currentYear - 1)}
-                    className="px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    className="px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors"
                     title="Année précédente"
                   >
                     ←
                   </button>
-                  <span className="px-3 py-1 text-sm font-medium bg-blue-500 text-white rounded">{currentYear}</span>
+                  <span className="px-3 py-1 text-sm font-medium bg-green-600 text-white rounded">{currentYear}</span>
                   <button
                     onClick={() => setCurrentYear(currentYear + 1)}
-                    className="px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    className="px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors"
                     title="Année suivante"
                   >
                     →
@@ -539,7 +541,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={goToPreviousMonth}
-                    className="px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    className="px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors"
                     title="Mois précédent"
                   >
                     ←
@@ -547,7 +549,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                   <span className="px-3 py-1 text-sm font-medium bg-blue-500 text-white rounded">{monthNames[selectedMonth - 1]}</span>
                   <button
                     onClick={goToNextMonth}
-                    className="px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    className="px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors"
                     title="Mois suivant"
                   >
                     →
@@ -574,7 +576,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-3 sm:space-y-0 sm:space-x-4">
             <button
               onClick={() => openModal()}
-              className="flex items-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-md hover:shadow-lg min-w-[200px]"
+              className="flex items-center space-x-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors shadow-md hover:shadow-lg min-w-[200px]"
             >
               <Plus className="w-5 h-5" />
               <span className="font-medium">
@@ -674,7 +676,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                       </button>
                       <button
                         onClick={() => openModal(data)}
-                        className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
+                        className="p-2 text-gray-600 hover:text-green-600 transition-colors"
                         title="Modifier"
                       >
                         <Edit3 className="w-4 h-4" />
@@ -837,17 +839,17 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                   )}
 
                   {/* Corrections suggérées - affiché seulement s'il y a des problèmes ou si tout est cohérent */}
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
                     <div className="flex items-center mb-3">
-                      <CheckCircle className="h-5 w-5 text-blue-600 mr-2" />
-                      <h4 className="font-semibold text-blue-800 dark:text-blue-200">
+                      <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                      <h4 className="font-semibold text-green-800 dark:text-green-200">
                         {validation.cpReliquat.status === 'valid' && validation.rttPrisDansMois.status === 'valid' && validation.cpPrisMoisPrecedent.status === 'valid' && validation.soldeCet.status === 'valid' 
                           ? 'Validation réussie' 
                           : 'Corrections attendues'
                         } :
                       </h4>
                     </div>
-                    <div className="text-sm text-blue-700 dark:text-blue-300 space-y-3">
+                    <div className="text-sm text-green-700 dark:text-green-300 space-y-3">
                       {validation.cpReliquat.difference !== 0 && (
                         <div>
                           <div className="font-semibold mb-1">• <strong>Reliquat CP:</strong> {validation.cpReliquat.difference > 0 ? 'Réduire' : 'Augmenter'} le reliquat saisi</div>
@@ -1029,7 +1031,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                             <button
                               type="button"
                               onClick={() => setFormData({...formData, rttPrisDansMois: expected.rttPrisDansMois})}
-                              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded transition-colors"
+                              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded transition-colors"
                               title={`Suggéré: ${expected.rttPrisDansMois} jours (basé sur les congés enregistrés)`}
                             >
                               {expected.rttPrisDansMois}
@@ -1064,7 +1066,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                             <button
                               type="button"
                               onClick={() => setFormData({...formData, soldeCet: expected.cetPrisDansMois})}
-                              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded transition-colors"
+                              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded transition-colors"
                               title={`Suggéré: ${expected.cetPrisDansMois} jours (basé sur les congés enregistrés)`}
                             >
                               {expected.cetPrisDansMois}
@@ -1130,7 +1132,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                 >
                   {editingData ? 'Mettre à jour' : 'Ajouter'}
                 </button>

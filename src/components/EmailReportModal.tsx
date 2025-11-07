@@ -4,7 +4,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Mail, Send, Eye, X, Check, Calendar, Clock, Filter, Plus, Edit3 } from 'lucide-react';
 import { LeaveEntry } from '../types';
 import { format, subDays, startOfMonth, endOfMonth, isWeekend } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr, enUS } from 'date-fns/locale';
+import { formatWorkingDays } from '../utils/leaveUtils';
 
 interface EmailReportModalProps {
   isOpen: boolean;
@@ -302,45 +303,28 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
     
     typeOrder.forEach(type => {
       if (leavesByType[type] && leavesByType[type].length > 0) {
+        // Calculer le total des jours pour ce type
+        const totalDays = leavesByType[type].reduce((sum, leave) => sum + leave.workingDays, 0);
         const typeLabel = getLeaveTypeLabel(type);
-        content += `${typeLabel}\n`;
         
-        // Collecter toutes les dates pour ce type
-        const allDates: string[] = [];
+        // Afficher le total des jours avec formatage correct pour les demi-journées (en anglais)
+        content += `${formatWorkingDays(totalDays, 'en')} of ${typeLabel}\n`;
         
+        // Afficher chaque congé
         leavesByType[type].forEach(leave => {
           const startDate = new Date(leave.startDate);
           const endDate = new Date(leave.endDate);
           
-          // Si c'est une période d'un seul jour
+          // Si c'est une période d'un seul jour (ou demi-journée)
           if (startDate.toDateString() === endDate.toDateString()) {
-            if (isWorkingDay(startDate)) {
-              const formattedDate = format(startDate, 'dd MMM yyyy', { locale: fr });
-              allDates.push(formattedDate);
-            }
+            const formattedDate = format(startDate, 'dd MMM yyyy', { locale: enUS });
+            content += `• ${formattedDate}\n`;
           } else {
-            // Si c'est une période multi-jours, afficher tous les jours ouvrés
-            const currentDate = new Date(startDate);
-            while (currentDate <= endDate) {
-              // Ignorer les week-ends et jours fériés
-              if (isWorkingDay(currentDate)) {
-                const formattedDate = format(currentDate, 'dd MMM yyyy', { locale: fr });
-                allDates.push(formattedDate);
-              }
-              currentDate.setDate(currentDate.getDate() + 1);
-            }
+            // Si c'est une période multi-jours, afficher la période
+            const formattedStartDate = format(startDate, 'dd MMM yyyy', { locale: enUS });
+            const formattedEndDate = format(endDate, 'dd MMM yyyy', { locale: enUS });
+            content += `• from ${formattedStartDate} to ${formattedEndDate}\n`;
           }
-        });
-        
-        // Trier les dates et les afficher
-        const uniqueDates = Array.from(new Set(allDates)).sort((a, b) => {
-          const dateA = new Date(a);
-          const dateB = new Date(b);
-          return dateA.getTime() - dateB.getTime();
-        });
-        
-        uniqueDates.forEach(date => {
-          content += `• ${date}\n`;
         });
         
         content += `\n`;
@@ -360,7 +344,7 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
-            <Mail className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <Mail className="h-6 w-6 text-green-600 dark:text-green-400" />
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
               Rapport de Congés
             </h2>
@@ -369,7 +353,7 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
             <button
               onClick={handleSubmit}
               disabled={isSubmitting || selectedLeaves.length === 0}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
               title={selectedLeaves.length === 0 ? "Sélectionnez des congés à envoyer" : "Envoyer le rapport par email"}
             >
               {isSubmitting ? (
@@ -427,7 +411,7 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
                           onClick={() => toggleTypeFilter(type)}
                           className={`flex items-center px-3 py-2 rounded-full border transition-all ${
                             selectedTypes.includes(type)
-                              ? 'bg-blue-600 text-white border-blue-600'
+                              ? 'bg-green-600 text-white border-green-600'
                               : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
                           }`}
                         >
@@ -491,7 +475,7 @@ const EmailReportModal: React.FC<EmailReportModalProps> = ({
                           onClick={() => setDateFilter(period.key as any)}
                           className={`px-3 py-2 rounded-full border transition-all text-sm ${
                             dateFilter === period.key
-                              ? 'bg-blue-600 text-white border-blue-600'
+                              ? 'bg-green-600 text-white border-green-600'
                               : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
                           }`}
                         >

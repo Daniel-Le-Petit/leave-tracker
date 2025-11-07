@@ -283,7 +283,7 @@ const SmartLeavePlanner: React.FC<SmartLeavePlannerProps> = ({ leaves, currentYe
                 </p>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-gray-600 dark:text-gray-400">
-                    {period.workingDays} jour(s) de congé
+                    {period.workingDays % 1 === 0 ? `${period.workingDays} jour${period.workingDays > 1 ? 's' : ''} de congé` : period.workingDays === 0.5 ? '1/2 journée de congé' : `${Math.floor(period.workingDays)} jour${Math.floor(period.workingDays) > 1 ? 's' : ''} et demi de congé`}
                   </span>
                   {period.holidaysIncluded.length > 0 && (
                     <span className="text-blue-600 dark:text-blue-400 font-medium">

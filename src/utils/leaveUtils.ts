@@ -106,9 +106,9 @@ export function calculateWorkingDays(
     if (isSameDay(start, end)) {
       workingDays = 0.5;
     } else {
-      // Pour les périodes de plusieurs jours, on peut ajuster selon le type de demi-jour
-      // Par défaut, on garde le calcul normal car les demi-jours sont généralement
-      // appliqués au premier ou dernier jour selon le contexte
+      // Pour les périodes de plusieurs jours avec demi-journée,
+      // on soustrait 0.5 du total (le dernier jour compte pour 0.5 au lieu de 1)
+      workingDays = Math.max(0.5, workingDays - 0.5);
     }
   }
 
@@ -559,6 +559,41 @@ export function formatDate(date: string | Date, formatStr: string = 'dd/MM/yyyy'
   }
   
   return format(dateObj, formatStr, { locale: fr });
+}
+
+/**
+ * Formate le nombre de jours ouvrés pour l'affichage (gère les demi-journées)
+ * Exemples: 0.5 -> "1/2 journée", 1.5 -> "1 jour et demi", 2 -> "2 jours"
+ * @param days - Nombre de jours
+ * @param locale - Locale pour la traduction ('fr' ou 'en'), par défaut 'fr'
+ */
+export function formatWorkingDays(days: number, locale: 'fr' | 'en' = 'fr'): string {
+  if (days === 0) return locale === 'en' ? '0 day' : '0 jour';
+  
+  // Vérifier si c'est un nombre décimal
+  const isDecimal = days % 1 !== 0;
+  
+  if (!isDecimal) {
+    // Nombre entier
+    if (locale === 'en') {
+      return `${days} day${days > 1 ? 's' : ''}`;
+    }
+    return `${days} jour${days > 1 ? 's' : ''}`;
+  }
+  
+  // Nombre décimal
+  const wholePart = Math.floor(days);
+  
+  if (wholePart === 0) {
+    // Seulement une demi-journée
+    return locale === 'en' ? '1/2 day' : '1/2 journée';
+  } else {
+    // Jours entiers + demi-journée
+    if (locale === 'en') {
+      return `${wholePart} day${wholePart > 1 ? 's' : ''} and a half`;
+    }
+    return `${wholePart} jour${wholePart > 1 ? 's' : ''} et demi`;
+  }
 }
 
 /**

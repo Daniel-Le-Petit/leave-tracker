@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { LeaveEntry, LeaveType } from '../../types'
-import { calculateWorkingDays, formatDate, frenchDateToISO, isoDateToFrench, isValidFrenchDate, getHolidaysForYear } from '../../utils/leaveUtils'
+import { calculateWorkingDays, formatDate, formatWorkingDays, frenchDateToISO, isoDateToFrench, isValidFrenchDate, getHolidaysForYear } from '../../utils/leaveUtils'
 import { leaveStorage } from '../../utils/storage'
 import DateInputWithButtons from '../../components/DateInputWithButtons'
 
@@ -121,14 +121,14 @@ export default function EditLeavePage() {
       return
     }
 
-    if (workingDays < 0) {
-      toast.error('Le nombre de jours ouvrables ne peut pas être négatif')
+    if (workingDays < 0.5) {
+      toast.error('Le nombre de jours ouvrables doit être au moins 0.5 (1/2 journée)')
       return
     }
     
     // Pour les RTT, on peut autoriser 0 jour ouvré (cas particuliers)
-    if (formData.type !== 'rtt' && workingDays === 0) {
-      toast.error('La période sélectionnée doit contenir au moins un jour ouvrable')
+    if (formData.type !== 'rtt' && workingDays < 0.5) {
+      toast.error('La période sélectionnée doit contenir au moins 0.5 jour ouvrable (1/2 journée)')
       return
     }
 
@@ -218,6 +218,7 @@ export default function EditLeavePage() {
                       value={formData.type}
                       onChange={(e) => setFormData({ ...formData, type: e.target.value as LeaveType })}
                       className="select"
+                      title="Sélectionner le type de congé"
                       required
                     >
                       {leaveTypes.map((type) => (
@@ -297,6 +298,36 @@ export default function EditLeavePage() {
                     )}
                   </div>
 
+                  {/* Jours ouvrables - Saisie manuelle */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Jours ouvrables *
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="number"
+                        min="0.5"
+                        step="0.5"
+                        value={workingDays}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value);
+                          if (!isNaN(value) && value >= 0.5) {
+                            setWorkingDays(value);
+                          } else if (e.target.value === '' || e.target.value === '0') {
+                            setWorkingDays(0.5);
+                          }
+                        }}
+                        placeholder="0.5, 1, 1.5, 2..."
+                        title="Nombre de jours ouvrés (0.5 = 1/2 journée, 1.5 = 1 jour et demi, etc.)"
+                        className="input flex-1"
+                        required
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Calculé automatiquement. Vous pouvez modifier pour saisir 0.5 (1/2 journée), 1.5 (1 jour et demi), etc.
+                    </p>
+                  </div>
+
                   {/* Notes */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -318,7 +349,7 @@ export default function EditLeavePage() {
                     </Link>
                     <button
                       type="submit"
-                      disabled={isSubmitting || (formData.type !== 'rtt' && workingDays <= 0)}
+                      disabled={isSubmitting || (formData.type !== 'rtt' && workingDays < 0.5)}
                       className="btn-primary"
                     >
                       <Save className="w-4 h-4 mr-2" />
@@ -372,10 +403,7 @@ export default function EditLeavePage() {
                   </span>
                   <div className="mt-1">
                     <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {workingDays}
-                    </span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400 ml-1">
-                      jour{workingDays > 1 ? 's' : ''}
+                      {formatWorkingDays(workingDays)}
                     </span>
                   </div>
                 </div>
@@ -395,7 +423,7 @@ export default function EditLeavePage() {
                 {/* Validation */}
                 {formData.startDate && formData.endDate && (
                   <div className="mt-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-700">
-                    {workingDays > 0 ? (
+                    {workingDays >= 0.5 ? (
                       <div className="text-sm text-green-600 dark:text-green-400">
                         ✅ Période valide
                       </div>

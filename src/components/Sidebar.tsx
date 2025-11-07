@@ -101,7 +101,7 @@ export default function Sidebar({ onExport, onImport, onEmail }: SidebarProps) {
         }
         input.click()
       },
-      color: 'text-blue-600 hover:text-blue-700'
+      color: 'text-green-600 hover:text-green-700'
     }
   ]
 

@@ -6,7 +6,8 @@ import { LeaveEntry } from '../../types'
 import { leaveStorage } from '../../utils/storage'
 import MainLayout from '../../components/MainLayout'
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { fr, enUS } from 'date-fns/locale'
+import { formatWorkingDays } from '../../utils/leaveUtils'
 
 export default function VacationReportPage() {
   const [leaves, setLeaves] = useState<LeaveEntry[]>([])
@@ -393,19 +394,37 @@ export default function VacationReportPage() {
                           
                           return (
                             <div key={type}>
-                              {totalDays} jour{totalDays > 1 ? 's' : ''} de {getLeaveTypeLabel(type)}<br/>
-                              {typeLeaves.map(leave => (
-                                <div key={leave.id}>
-                                  • du {format(new Date(leave.startDate), 'dd MMM yyyy', { locale: fr })} au {format(new Date(leave.endDate), 'dd MMM yyyy', { locale: fr })}<br/>
-                                </div>
-                              ))}
+                              {formatWorkingDays(totalDays, 'en')} of {getLeaveTypeLabel(type)}<br/>
+                              {typeLeaves.map(leave => {
+                                const startDate = new Date(leave.startDate);
+                                const endDate = new Date(leave.endDate);
+                                
+                                // Si c'est une période d'un seul jour (ou demi-journée)
+                                if (startDate.toDateString() === endDate.toDateString()) {
+                                  const formattedDate = format(startDate, 'dd MMM yyyy', { locale: enUS });
+                                  return (
+                                    <div key={leave.id}>
+                                      • {formattedDate}<br/>
+                                    </div>
+                                  );
+                                } else {
+                                  // Si c'est une période multi-jours, afficher la période
+                                  const formattedStartDate = format(startDate, 'dd MMM yyyy', { locale: enUS });
+                                  const formattedEndDate = format(endDate, 'dd MMM yyyy', { locale: enUS });
+                                  return (
+                                    <div key={leave.id}>
+                                      • from {formattedStartDate} to {formattedEndDate}<br/>
+                                    </div>
+                                  );
+                                }
+                              })}
                               {index < ['rtt', 'cp', 'cet'].filter(t => selectedLeaveEntries.some(leave => leave.type === t)).length - 1 && <><br/></>}
                             </div>
                           )
                         })}
                       </>
                     ) : (
-                      'Aucun congé sélectionné'
+                      'No leave selected'
                     )}
                     <br/><br/>
                     Regards,<br/>

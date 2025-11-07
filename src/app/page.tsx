@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
-import { Info, Clock, Calendar, Timer, PiggyBank } from 'lucide-react'
+import { Info, Clock, Calendar, Timer, PiggyBank, Briefcase, PiggyBank as RetireIcon, TrendingDown, Calendar as CalendarIcon, Lightbulb } from 'lucide-react'
 import { AppSettings, LeaveBalance, LeaveEntry, PublicHoliday, CarryoverLeave } from '../types'
 import { calculateLeaveBalances, calculateLeaveStats, formatDate, getHolidaysForYear, getLeaveTypeLabel, getLeaveTypeColor, getLeaveTypeIcon, calculateMonthlyLeaveSummarySeparated, calculateDashboardCards } from '../utils/leaveUtils'
 import CalculationTooltip from '../components/CalculationTooltip'
@@ -403,15 +403,15 @@ export default function Dashboard() {
                                 
           {/* Card 3: Poser */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
-            <div className="bg-blue-100 dark:bg-blue-900 px-1 sm:px-4 py-1 sm:py-3 flex items-center space-x-1 sm:space-x-3">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="bg-green-100 dark:bg-green-900 px-1 sm:px-4 py-1 sm:py-3 flex items-center space-x-1 sm:space-x-3">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
                                   </div>
-              <span className="text-blue-700 dark:text-blue-300 font-medium text-sm">Poser</span>
+              <span className="text-green-700 dark:text-green-300 font-medium text-sm">Poser</span>
                                   </div>
-            <div className="p-1 sm:p-4 text-center bg-blue-50">
+            <div className="p-1 sm:p-4 text-center bg-green-50">
               <CalculationTooltip
                 value="54.5"
                 calculation={`Total des congés à poser (VÉRIFICATION):
@@ -421,16 +421,16 @@ export default function Dashboard() {
 • = 54.5 jours total à poser
 • ✅ CALCUL CORRECT: 4 + 51.5 + 0 = 54.5`}
               >
-                <div className="text-xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1 cursor-help">54.5</div>
+                <div className="text-xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-1 cursor-help">54.5</div>
               </CalculationTooltip>
               <div className="flex justify-center space-x-2 mt-2">
-                <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center">
                   <span className="text-red-500 text-xs font-bold">3</span>
                                 </div>
-                <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center">
                   <span className="text-blue-800 text-xs font-bold">51.5</span>
                               </div>
-                <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center">
                   <span className="text-blue-400 text-xs font-bold">0</span>
                             </div>
                     </div>
@@ -501,7 +501,7 @@ export default function Dashboard() {
 • Total RTT: 7 + 23 = 30 jours
 • ✅ CALCUL CORRECT: 30 jours RTT`}
                   >
-                    <div className="text-lg sm:text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1 cursor-help">30</div>
+                    <div className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400 mb-1 cursor-help">30</div>
                   </CalculationTooltip>
               </div>
                             
@@ -571,15 +571,15 @@ export default function Dashboard() {
 
           {/* Cartes CP */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
-            <div className="bg-blue-200 dark:bg-blue-800 px-6 py-2">
-              <h2 className="text-lg font-bold text-blue-800 dark:text-blue-200 flex items-center">
+            <div className="bg-green-200 dark:bg-green-800 px-6 py-2">
+              <h2 className="text-lg font-bold text-green-800 dark:text-green-200 flex items-center">
                 <div className="w-8 h-8 bg-white dark:bg-gray-100 rounded-full flex items-center justify-center mr-3 shadow-md">
-                  <Calendar className="w-5 h-5 text-blue-600" />
+                  <Calendar className="w-5 h-5 text-green-600" />
                 </div>
                 CP
               </h2>
                 </div>
-            <div className="p-6 bg-blue-50">
+            <div className="p-6 bg-green-50">
               <div className="grid grid-cols-5 gap-1 sm:gap-4">
                 {/* Quota initial CP */}
                 <div className="text-center">
@@ -592,7 +592,7 @@ export default function Dashboard() {
 • = 69.5 jours total
 • ✅ CALCUL CORRECT: 27 + 43.5 = 69.5`}
                   >
-                    <div className="text-lg sm:text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1 cursor-help">69,5</div>
+                    <div className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400 mb-1 cursor-help">69,5</div>
                   </CalculationTooltip>
                 </div>
                                 
@@ -685,7 +685,7 @@ export default function Dashboard() {
 • CET pris: 5 jours
 • CET restant: 0 jours`}
                   >
-                    <div className="text-lg sm:text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1 cursor-help">5</div>
+                    <div className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400 mb-1 cursor-help">5</div>
                           </CalculationTooltip>
                 </div>
                                 
@@ -924,7 +924,7 @@ export default function Dashboard() {
         <div className="lg:col-span-2 space-y-6">
           {/* Bloc Incohérences détectées */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="w-full bg-blue-100 dark:bg-blue-900/20 px-6 py-3 rounded-t-lg">
+            <div className="w-full bg-green-100 dark:bg-green-900/20 px-6 py-3 rounded-t-lg">
               <div className="flex items-center space-x-3">
                 <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-bold">!</span>
@@ -953,6 +953,191 @@ export default function Dashboard() {
 
         {/* Colonne droite - Informations complémentaires */}
         <div className="space-y-6">
+          {/* Cartes options retraite */}
+          <div className="bg-green-50 dark:bg-green-900/20 rounded-lg shadow-sm border border-green-200 dark:border-green-800 p-6">
+            <h3 className="text-lg font-bold text-green-800 dark:text-green-200 mb-4">Prêt à simuler ta retraite progressive ?</h3>
+            <div className="grid grid-cols-1 gap-4">
+              {/* Carte 1: Travailler à temps partiel */}
+              <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-800 p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-20 h-20 bg-green-600 rounded-lg overflow-hidden flex items-center justify-center relative">
+                      <img 
+                        src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200&h=200&fit=crop" 
+                        alt="Travail à temps partiel"
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-green-600/30 flex items-center justify-center z-10">
+                        <Briefcase className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">Travailler à temps partiel</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                      Réduisez votre temps de travail (entre 40% et 80%) tout en conservant votre emploi.
+                    </p>
+                    <a href="#" className="text-sm font-medium text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 flex items-center">
+                      En savoir plus
+                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Carte 2: Toucher une partie de sa retraite */}
+              <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-800 p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-20 h-20 bg-green-500 rounded-lg overflow-hidden flex items-center justify-center relative">
+                      <img 
+                        src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=200&h=200&fit=crop" 
+                        alt="Retraite"
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-green-500/30 flex items-center justify-center z-10">
+                        <RetireIcon className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">Toucher une partie de sa retraite</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                      Percevez 30% à 50% de votre pension estimée au taux plein, selon votre situation.
+                    </p>
+                    <a href="#" className="text-sm font-medium text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 flex items-center">
+                      En savoir plus
+                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Carte 3: Transition en douceur */}
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg border border-purple-200 dark:border-purple-800 p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-20 h-20 bg-purple-500 rounded-lg overflow-hidden flex items-center justify-center relative">
+                      <img 
+                        src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=200&h=200&fit=crop" 
+                        alt="Transition"
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-purple-500/30 flex items-center justify-center z-10">
+                        <TrendingDown className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">Transition en douceur</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                      Préparez sereinement votre retraite complète tout en gardant un revenu stable.
+                    </p>
+                    <a href="#" className="text-sm font-medium text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-200 flex items-center">
+                      En savoir plus
+                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Carte 4: Flexibilité temporelle */}
+              <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-800 p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-20 h-20 bg-green-600 rounded-lg overflow-hidden flex items-center justify-center relative">
+                      <img 
+                        src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=200&h=200&fit=crop" 
+                        alt="Flexibilité"
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-green-600/30 flex items-center justify-center z-10">
+                        <CalendarIcon className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">Flexibilité temporelle</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                      Choisissez quand commencer et ajustez votre rythme selon vos besoins personnels.
+                    </p>
+                    <a href="#" className="text-sm font-medium text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 flex items-center">
+                      En savoir plus
+                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Carte 5: Conseils sur mesure */}
+              <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-800 p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-20 h-20 bg-green-600 rounded-lg overflow-hidden flex items-center justify-center relative">
+                      <img 
+                        src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=200&h=200&fit=crop" 
+                        alt="Conseils"
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-green-600/30 flex items-center justify-center z-10">
+                        <Info className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">Conseils sur mesure pour votre situation</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                      Reçois des recommandations adaptées à ta situation pour optimiser ta stratégie de retraite progressive.
+                    </p>
+                    <a href="#" className="text-sm font-medium text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 flex items-center">
+                      En savoir plus
+                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Carte 6: Comparaison détaillée des revenus */}
+              <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-800 p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-20 h-20 bg-green-600 rounded-lg overflow-hidden flex items-center justify-center relative">
+                      <img 
+                        src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=200&h=200&fit=crop" 
+                        alt="Comparaison"
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-green-600/30 flex items-center justify-center z-10">
+                        <PiggyBank className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">Comparaison détaillée des revenus</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                      Visualise clairement l'impact financier de la retraite progressive sur tes revenus nets et ton niveau de vie.
+                    </p>
+                    <a href="#" className="text-sm font-medium text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 flex items-center">
+                      En savoir plus
+                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       </div>

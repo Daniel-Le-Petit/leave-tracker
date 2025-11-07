@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { LeaveEntry } from '../../types'
-import { formatDate } from '../../utils/leaveUtils'
+import { formatDate, formatWorkingDays } from '../../utils/leaveUtils'
 import { leaveStorage } from '../../utils/storage'
 import { useRouter } from 'next/navigation'
 import MainLayout from '../../components/MainLayout'
@@ -282,10 +282,7 @@ export default function HistoryPage() {
                     </td>
                     <td className="px-6 py-4 text-center border-r border-gray-200 dark:border-gray-700">
                       <span className="font-semibold text-gray-900 dark:text-white">
-                        {leave.workingDays}
-                      </span>
-                      <span className="text-gray-500 dark:text-gray-400 ml-1">
-                        jour{leave.workingDays > 1 ? 's' : ''}
+                        {formatWorkingDays(leave.workingDays)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center border-r border-gray-200 dark:border-gray-700">

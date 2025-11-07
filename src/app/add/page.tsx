@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { LeaveEntry, LeaveType } from '../../types'
-import { calculateWorkingDays, formatDate, frenchDateToISO, isValidFrenchDate, canTakeRTTForMonth, calculateAvailableRTTForPeriod, getHolidaysForYear } from '../../utils/leaveUtils'
+import { calculateWorkingDays, formatDate, formatWorkingDays, frenchDateToISO, isValidFrenchDate, canTakeRTTForMonth, calculateAvailableRTTForPeriod, getHolidaysForYear } from '../../utils/leaveUtils'
 import { leaveStorage } from '../../utils/storage'
 import DateInputWithButtons from '../../components/DateInputWithButtons'
 
@@ -87,14 +87,14 @@ export default function AddLeavePage() {
       return
     }
 
-    if (workingDays < 0) {
-      toast.error('Le nombre de jours ouvrables ne peut pas être négatif')
+    if (workingDays < 0.5) {
+      toast.error('Le nombre de jours ouvrables doit être au moins 0.5 (1/2 journée)')
       return
     }
     
     // Pour les RTT, on peut autoriser 0 jour ouvré (cas particuliers)
-    if (formData.type !== 'rtt' && workingDays === 0) {
-      toast.error('La période sélectionnée doit contenir au moins un jour ouvrable')
+    if (formData.type !== 'rtt' && workingDays < 0.5) {
+      toast.error('La période sélectionnée doit contenir au moins 0.5 jour ouvrable (1/2 journée)')
       return
     }
 
@@ -325,6 +325,36 @@ export default function AddLeavePage() {
                     )}
                   </div>
 
+                  {/* Jours ouvrables - Saisie manuelle */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Jours ouvrables *
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="number"
+                        min="0.5"
+                        step="0.5"
+                        value={workingDays}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value);
+                          if (!isNaN(value) && value >= 0.5) {
+                            setWorkingDays(value);
+                          } else if (e.target.value === '' || e.target.value === '0') {
+                            setWorkingDays(0.5);
+                          }
+                        }}
+                        placeholder="0.5, 1, 1.5, 2..."
+                        title="Nombre de jours ouvrés (0.5 = 1/2 journée, 1.5 = 1 jour et demi, etc.)"
+                        className="input input-mobile flex-1"
+                        required
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Calculé automatiquement. Vous pouvez modifier pour saisir 0.5 (1/2 journée), 1.5 (1 jour et demi), etc.
+                    </p>
+                  </div>
+
                   {/* Mode prévision/réel */}
                   <div className="form-group">
                     <label htmlFor="isForecast" className="form-label">
@@ -360,7 +390,7 @@ export default function AddLeavePage() {
                   <div className="flex justify-end">
                     <button
                       type="submit"
-                      disabled={isSubmitting || (formData.type !== 'rtt' && workingDays <= 0)}
+                      disabled={isSubmitting || (formData.type !== 'rtt' && workingDays < 0.5)}
                       className="btn-primary btn-mobile-large touch-button"
                     >
                       <Save className="w-4 h-4 mr-2" />
@@ -435,10 +465,7 @@ export default function AddLeavePage() {
                   </span>
                   <div className="mt-1">
                     <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {workingDays}
-                    </span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400 ml-1">
-                      jour{workingDays > 1 ? 's' : ''}
+                      {formatWorkingDays(workingDays)}
                     </span>
                   </div>
                 </div>
@@ -458,7 +485,7 @@ export default function AddLeavePage() {
                 {/* Validation */}
                 {formData.startDate && formData.endDate && (
                   <div className="mt-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-700">
-                    {workingDays > 0 ? (
+                    {workingDays >= 0.5 ? (
                       <div className="text-sm text-green-600 dark:text-green-400">
                         ✅ Période valide
                       </div>
@@ -482,7 +509,7 @@ export default function AddLeavePage() {
               <div className="card-body">
                 <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
                   <li>• Les weekends et jours fériés ne sont pas comptabilisés</li>
-                  <li>• Une demi-journée compte pour 0.5 jour ouvrable</li>
+                  <li>• Vous pouvez saisir 0.5 (1/2 journée), 1.5 (1 jour et demi), etc.</li>
                   <li>• Vous pouvez modifier vos congés depuis l'historique</li>
                   <li>• Les notes sont optionnelles mais utiles</li>
                 </ul>

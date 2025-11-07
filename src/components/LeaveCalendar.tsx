@@ -346,13 +346,35 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
     setSelectedDate(null);
   };
 
+  // Fonction pour détecter si c'est une demi-journée
+  const isHalfDay = (leave: any): boolean => {
+    return leave.workingDays === 0.5 || leave.isHalfDay === true;
+  };
+
   const getLeaveColor = (leave: any) => {
-    switch (leave.type) {
-      case 'rtt': return 'bg-red-500 text-white';
-      case 'cp': return 'bg-blue-800 text-white';
-      case 'cet': return 'bg-blue-300 text-white';
-      default: return 'bg-gray-500 text-white';
+    const baseColor = (() => {
+      switch (leave.type) {
+        case 'rtt': return 'bg-red-500 text-white';
+        case 'cp': return 'bg-blue-800 text-white';
+        case 'cet': return 'bg-blue-300 text-white';
+        default: return 'bg-gray-500 text-white';
+      }
+    })();
+    
+    // Si c'est une demi-journée, ajouter un style différent (bordure en pointillés, opacité réduite)
+    if (isHalfDay(leave)) {
+      return `${baseColor} border-2 border-dashed border-white/70 opacity-75`;
     }
+    
+    return baseColor;
+  };
+
+  // Fonction pour obtenir la hauteur du badge de congé (plus petit pour les demi-journées)
+  const getLeaveHeight = (leave: any) => {
+    if (isHalfDay(leave)) {
+      return 'h-3'; // Plus petit pour les demi-journées
+    }
+    return 'h-4'; // Hauteur normale pour les journées complètes
   };
 
   const getSuggestionColor = (suggestion: string) => {
@@ -501,22 +523,21 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                       allHolidays.push(...getHolidaysForYear(y))
                     }
                     
+                    // Vérifier si c'est une demi-journée
+                    const isHalfDayLeave = leave.workingDays === 0.5 || leave.isHalfDay === true
+                    
+                    // Si c'est une demi-journée et que le congé est dans un seul mois
+                    if (isHalfDayLeave && leaveStartDate >= monthStart && leaveEndDate <= monthEnd) {
+                      // Utiliser directement la valeur workingDays pour les demi-journées dans un seul mois
+                      return {
+                        ...leave,
+                        workingDaysInMonth: leave.workingDays
+                      }
+                    }
+                    
                     let workingDaysInMonth = 0
                     const currentDate = new Date(Math.max(leaveStartDate.getTime(), monthStart.getTime()))
                     const endDate = new Date(Math.min(leaveEndDate.getTime(), monthEnd.getTime()))
-                    
-                    // Debug pour RTT 30-31 décembre 2024
-                    if (year === 2024 && month === 11 && leave.startDate.includes('2024-12-30')) {
-                      console.log('Debug boucle 30-31 décembre 2024:', {
-                        leaveStartDate: leaveStartDate.toDateString(),
-                        leaveEndDate: leaveEndDate.toDateString(),
-                        monthStart: monthStart.toDateString(),
-                        monthEnd: monthEnd.toDateString(),
-                        currentDate: currentDate.toDateString(),
-                        endDate: endDate.toDateString(),
-                        condition: currentDate <= endDate
-                      })
-                    }
                     
                     // Traiter tous les jours de la période (inclusif) - approche différente
                     const startTime = Math.max(leaveStartDate.getTime(), monthStart.getTime())
@@ -525,28 +546,8 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                     const monthEndTime = new Date(monthEnd.getFullYear(), monthEnd.getMonth(), monthEnd.getDate(), 23, 59, 59, 999).getTime()
                     const endTime = Math.min(leaveEndTime, monthEndTime)
                     
-                    // Debug pour RTT 30-31 décembre 2024
-                    if (year === 2024 && month === 11 && leave.startDate.includes('2024-12-30')) {
-                      console.log('Debug nouvelle approche 30-31 décembre 2024:', {
-                        leaveStartDate: leaveStartDate.toDateString(),
-                        leaveEndDate: leaveEndDate.toDateString(),
-                        monthStart: monthStart.toDateString(),
-                        monthEnd: monthEnd.toDateString(),
-                        startTime: new Date(startTime).toDateString(),
-                        endTime: new Date(endTime).toDateString(),
-                        startTimeMs: startTime,
-                        endTimeMs: endTime,
-                        leaveEndTimeMs: leaveEndDate.getTime(),
-                        monthEndTimeMs: monthEnd.getTime(),
-                        difference: endTime - startTime,
-                        daysDifference: (endTime - startTime) / (24 * 60 * 60 * 1000)
-                      })
-                    }
-                    
                     // Boucle jour par jour
-                    let iterationCount = 0
                     for (let dayTime = startTime; dayTime <= endTime; dayTime += 24 * 60 * 60 * 1000) {
-                      iterationCount++
                       const currentDate = new Date(dayTime)
                       const dayOfWeek = currentDate.getDay()
                       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
@@ -555,34 +556,23 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                         new Date(holiday.date).toDateString() === currentDate.toDateString()
                       )
                       
-                      // Debug pour RTT 30-31 décembre 2024
-                      if (year === 2024 && month === 11 && leave.startDate.includes('2024-12-30')) {
-                        console.log(`Debug calcul jours ouvrés 30-31 décembre 2024 (itération ${iterationCount}):`, {
-                          date: currentDate.toDateString(),
-                          dayTime,
-                          dayOfWeek,
-                          isWeekend,
-                          isHoliday,
-                          allHolidays: allHolidays.map(h => ({ date: h.date, name: h.name })),
-                          leaveStart: leave.startDate,
-                          leaveEnd: leave.endDate,
-                          workingDaysInMonth
-                        })
-                      }
-                      
                       if (!isWeekend && !isHoliday) {
-                        workingDaysInMonth++
+                        // Si c'est une demi-journée et que c'est le premier ou dernier jour du congé dans ce mois
+                        if (isHalfDayLeave) {
+                          // Pour les demi-journées, compter 0.5 au lieu de 1
+                          // Si c'est le premier jour du congé dans ce mois OU le dernier jour du congé dans ce mois
+                          const isFirstDayInMonth = currentDate.toDateString() === new Date(Math.max(leaveStartDate.getTime(), monthStart.getTime())).toDateString()
+                          const isLastDayInMonth = currentDate.toDateString() === new Date(Math.min(leaveEndDate.getTime(), monthEnd.getTime())).toDateString()
+                          
+                          if (isFirstDayInMonth || isLastDayInMonth) {
+                            workingDaysInMonth += 0.5
+                          } else {
+                            workingDaysInMonth++
+                          }
+                        } else {
+                          workingDaysInMonth++
+                        }
                       }
-                    }
-                    
-                    // Debug final pour RTT 30-31 décembre 2024
-                    if (year === 2024 && month === 11 && leave.startDate.includes('2024-12-30')) {
-                      console.log('Debug final 30-31 décembre 2024:', {
-                        iterationCount,
-                        workingDaysInMonth,
-                        startTime,
-                        endTime
-                      })
                     }
                     
                     return {
@@ -691,6 +681,18 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                         allHolidays.push(...getHolidaysForYear(y))
                       }
                       
+                      // Vérifier si c'est une demi-journée
+                      const isHalfDayLeave = leave.workingDays === 0.5 || leave.isHalfDay === true
+                      
+                      // Si c'est une demi-journée et que le congé est dans un seul mois
+                      if (isHalfDayLeave && leaveStartDate >= monthStart && leaveEndDate <= monthEnd) {
+                        // Utiliser directement la valeur workingDays pour les demi-journées dans un seul mois
+                        return {
+                          ...leave,
+                          workingDaysInMonth: leave.workingDays
+                        }
+                      }
+                      
                       let workingDaysInMonth = 0
                       const startTime = Math.max(leaveStartDate.getTime(), monthStart.getTime())
                       // Utiliser la fin de journée pour endTime (23:59:59.999)
@@ -709,7 +711,20 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                         )
                         
                         if (!isWeekend && !isHoliday) {
-                          workingDaysInMonth++
+                          // Si c'est une demi-journée et que c'est le premier ou dernier jour du congé dans ce mois
+                          if (isHalfDayLeave) {
+                            // Pour les demi-journées, compter 0.5 au lieu de 1
+                            const isFirstDayInMonth = currentDate.toDateString() === new Date(Math.max(leaveStartDate.getTime(), monthStart.getTime())).toDateString()
+                            const isLastDayInMonth = currentDate.toDateString() === new Date(Math.min(leaveEndDate.getTime(), monthEnd.getTime())).toDateString()
+                            
+                            if (isFirstDayInMonth || isLastDayInMonth) {
+                              workingDaysInMonth += 0.5
+                            } else {
+                              workingDaysInMonth++
+                            }
+                          } else {
+                            workingDaysInMonth++
+                          }
                         }
                       }
                       
@@ -902,8 +917,13 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                               )}
                               
                               {leave && (
-                                <div className={`text-xs p-1 rounded ${getLeaveColor(leave)} flex items-center justify-between`}>
-                                  <span className="truncate">{leave.type.toUpperCase()}</span>
+                                <div className={`text-xs p-1 rounded ${getLeaveColor(leave)} ${getLeaveHeight(leave)} flex items-center justify-between`}>
+                                  <span className="truncate flex items-center gap-1">
+                                    {leave.type.toUpperCase()}
+                                    {isHalfDay(leave) && (
+                                      <span className="text-[10px] font-bold" title="Demi-journée">½</span>
+                                    )}
+                                  </span>
                                   {leave.isForecast && (
                         <span className="text-xs opacity-75">(P)</span>
                       )}
@@ -982,21 +1002,21 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                           <tbody>
                             <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
                               <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">Pris en {monthNames[month]}</td>
-                              <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${prisRttMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>{rttTaken}</td>
-                              <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${prisCpMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>{cpTaken}</td>
-                              <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${prisCetMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>{cetTaken}</td>
+                              <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${prisRttMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>{rttTaken % 1 === 0 ? rttTaken : rttTaken.toFixed(1)}</td>
+                              <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${prisCpMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>{cpTaken % 1 === 0 ? cpTaken : cpTaken.toFixed(1)}</td>
+                              <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${prisCetMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>{cetTaken % 1 === 0 ? cetTaken : cetTaken.toFixed(1)}</td>
                             </tr>
                             <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
                               <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">Restant</td>
-                              <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-green-700 dark:text-green-400">{rttRemaining}</td>
+                              <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-green-700 dark:text-green-400">{rttRemaining % 1 === 0 ? rttRemaining : rttRemaining.toFixed(1)}</td>
                               <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${restantCpMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>{cpRemaining.toFixed(1)}</td>
-                              <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${restantCetMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>{cetRemaining}</td>
+                              <td className={`border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold ${restantCetMatch ? 'text-white bg-green-500' : 'text-gray-900 dark:text-white bg-pink-200 dark:bg-pink-800'}`}>{cetRemaining % 1 === 0 ? cetRemaining : cetRemaining.toFixed(1)}</td>
                             </tr>
                             <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
                               <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-left font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">Pris Cumulé</td>
-                              <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-gray-900 dark:text-white">{cumulativeRTT}</td>
-                              <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-gray-900 dark:text-white">{cumulativeCP}</td>
-                              <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-gray-900 dark:text-white">{cumulativeCET}</td>
+                              <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-gray-900 dark:text-white">{cumulativeRTT % 1 === 0 ? cumulativeRTT : cumulativeRTT.toFixed(1)}</td>
+                              <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-gray-900 dark:text-white">{cumulativeCP % 1 === 0 ? cumulativeCP : cumulativeCP.toFixed(1)}</td>
+                              <td className="border border-gray-200 dark:border-gray-700 px-1 py-1 text-center font-semibold text-gray-900 dark:text-white">{cumulativeCET % 1 === 0 ? cumulativeCET : cumulativeCET.toFixed(1)}</td>
                             </tr>
                           </tbody>
                         </table>
