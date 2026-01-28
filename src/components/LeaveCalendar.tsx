@@ -1053,7 +1053,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                                 const cetPrisCount = payrollData?.cetPrisMoisPrecedent?.filter(date => date.trim() !== '').length || 0;
                                 
                                 // Valeurs par défaut si pas de données
-                                const rttSolde = payrollData?.rttPrisDansMois || 0; // RTT pris = solde pour le mois précédent
+                                const rttSolde = payrollData?.rttPrisDansMois || 0; // RTT pris = solde pour le mois -1
                                 const cpSolde = payrollData?.cpReliquat || 0;
                                 const cetSolde = payrollData?.soldeCet || 0;
                                 

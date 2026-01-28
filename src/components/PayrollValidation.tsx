@@ -22,6 +22,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingData, setEditingData] = useState<PayrollData | null>(null)
   const [formData, setFormData] = useState<Partial<PayrollData>>({})
+  const [rttInputValue, setRttInputValue] = useState<string>('')
 
   const monthNames = [
     'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -55,9 +56,37 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
 
   const loadPayrollData = async () => {
     try {
-      const stored = localStorage.getItem(`payroll-data-${currentYear}`)
+      // Charger depuis payrollDataByMonth (format utilisé par la page payroll)
+      const stored = localStorage.getItem('payrollDataByMonth')
       if (stored) {
-        setPayrollData(JSON.parse(stored))
+        const payrollDataByMonth = JSON.parse(stored) as Record<string, Partial<PayrollData>>
+        // Convertir l'objet en tableau de PayrollData pour l'année courante
+        const payrollDataArray: PayrollData[] = Object.entries(payrollDataByMonth)
+          .filter(([key]) => key.startsWith(`${currentYear}-`))
+          .map(([key, data]) => {
+            // Extraire le mois de la clé (format: "2025-10")
+            const month = parseInt(key.split('-')[1])
+            return {
+              id: key,
+              month,
+              year: currentYear,
+              cpReliquat: data.cpReliquat ?? 0,
+              rttPrisDansMois: data.rttPrisDansMois ?? 0,
+              soldeCet: data.soldeCet ?? 0,
+              cpPrisMoisPrecedent: data.cpPrisMoisPrecedent || [],
+              cetPrisMoisPrecedent: data.cetPrisMoisPrecedent || [],
+              joursFeries: data.joursFeries || [],
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            } as PayrollData
+          })
+        setPayrollData(payrollDataArray)
+      } else {
+        // Fallback: essayer l'ancien format pour compatibilité
+        const oldStored = localStorage.getItem(`payroll-data-${currentYear}`)
+        if (oldStored) {
+          setPayrollData(JSON.parse(oldStored))
+        }
       }
     } catch (error) {
       console.error('Erreur lors du chargement des données de feuille de paie:', error)
@@ -66,7 +95,29 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
 
   const savePayrollData = async (data: PayrollData[]) => {
     try {
-      localStorage.setItem(`payroll-data-${currentYear}`, JSON.stringify(data))
+      // Charger les données existantes de payrollDataByMonth
+      const existingDataStr = localStorage.getItem('payrollDataByMonth')
+      const existingData = existingDataStr ? JSON.parse(existingDataStr) as Record<string, Partial<PayrollData>> : {}
+      
+      // Convertir le tableau en format payrollDataByMonth
+      const payrollDataByMonth: Record<string, Partial<PayrollData>> = { ...existingData }
+      
+      data.forEach(item => {
+        const key = `${item.year}-${item.month.toString().padStart(2, '0')}`
+        payrollDataByMonth[key] = {
+          month: item.month,
+          year: item.year,
+          cpReliquat: item.cpReliquat,
+          rttPrisDansMois: item.rttPrisDansMois,
+          soldeCet: item.soldeCet,
+          cpPrisMoisPrecedent: item.cpPrisMoisPrecedent,
+          cetPrisMoisPrecedent: item.cetPrisMoisPrecedent,
+          joursFeries: item.joursFeries
+        }
+      })
+      
+      // Sauvegarder dans le format payrollDataByMonth
+      localStorage.setItem('payrollDataByMonth', JSON.stringify(payrollDataByMonth))
       setPayrollData(data)
       onDataUpdate?.()
     } catch (error) {
@@ -88,8 +139,9 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
       return leaveDate.getMonth() + 1 === previousMonth && leaveDate.getFullYear() === previousYear
     })
 
-    // Calculs RTT - RTT pris dans le mois précédent
-    const rttLeaves = previousMonthLeaves.filter(leave => leave.type === 'rtt')
+    // Calculs RTT - RTT pris dans le mois sélectionné (pas le mois précédent)
+    // Quand on valide Décembre, on veut les RTT pris EN Décembre
+    const rttLeaves = monthLeaves.filter(leave => leave.type === 'rtt')
     const rttPrisDansMois = rttLeaves.reduce((sum, leave) => sum + leave.workingDays, 0)
 
     // Calculs CP - CP pris dans le mois précédent
@@ -256,6 +308,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
     if (data) {
       setEditingData(data)
       setFormData(data)
+      setRttInputValue(data.rttPrisDansMois !== undefined ? String(data.rttPrisDansMois) : '')
     } else {
       // Calculer les valeurs suggérées basées sur les congés existants
       const expected = calculateExpectedData(selectedMonth, currentYear)
@@ -265,11 +318,12 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
         month: selectedMonth,
         year: currentYear,
         cpReliquat: expected.cpReliquatAttendu, // Reliquat CP calculé
-        rttPrisDansMois: expected.rttPrisDansMois, // RTT pris du mois précédent
+        rttPrisDansMois: expected.rttPrisDansMois, // RTT pris du mois sélectionné
         soldeCet: expected.cetPrisDansMois, // Solde CET du mois précédent
         cpPrisMoisPrecedent: [], // CP pris du mois précédent (dates)
         joursFeries: [] // Jours fériés du mois précédent
       })
+      setRttInputValue(expected.rttPrisDansMois !== undefined ? String(expected.rttPrisDansMois) : '')
     }
     setIsModalOpen(true)
   }
@@ -278,6 +332,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
     setIsModalOpen(false)
     setEditingData(null)
     setFormData({})
+    setRttInputValue('')
   }
 
   // Normaliser les dates au format YYYY-MM-DD
@@ -320,9 +375,9 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
       id: editingData?.id || Date.now().toString(),
       month: formData.month!,
       year: formData.year!,
-      cpReliquat: formData.cpReliquat || 0,
-      rttPrisDansMois: formData.rttPrisDansMois || 0,
-      soldeCet: formData.soldeCet || 0,
+      cpReliquat: formData.cpReliquat ?? 0,
+      rttPrisDansMois: formData.rttPrisDansMois ?? 0,
+      soldeCet: formData.soldeCet ?? 0,
       cpPrisMoisPrecedent: normalizedCpPris,
       cetPrisMoisPrecedent: [],
       joursFeries: normalizedJoursFeries,
@@ -620,7 +675,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                       <strong>Reliquat CP calculé:</strong> {expected.cpReliquatAttendu} jours
                     </div>
                     <div>
-                      <strong>RTT pris ({monthNames[selectedMonth === 1 ? 11 : selectedMonth - 2]}):</strong> {expected.rttPrisDansMois} jours
+                      <strong>RTT pris ({monthNames[selectedMonth - 1]}):</strong> {expected.rttPrisDansMois} jours
                     </div>
                     <div>
                       <strong>CET pris ({monthNames[selectedMonth === 1 ? 11 : selectedMonth - 2]}):</strong> {expected.cetPrisDansMois} jours
@@ -630,7 +685,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                     </div>
                   </div>
                   <div className="mt-3 p-2 bg-green-100 dark:bg-green-800/30 rounded text-xs">
-                    <strong>Logique:</strong> Toutes les données correspondent au mois précédent ({monthNames[selectedMonth === 1 ? 11 : selectedMonth - 2]})
+                    <strong>Logique:</strong> RTT de {monthNames[selectedMonth - 1]}, autres données du mois précédent ({monthNames[selectedMonth === 1 ? 11 : selectedMonth - 2]})
                   </div>
                 </div>
               </div>
@@ -700,6 +755,11 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                     </div>
                   </div>
 
+                  {/* Titre Vérifications */}
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 mt-6">
+                    Vérifications
+                  </h3>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Reliquat CP */}
                     <div className={`rounded p-3 border-2 ${validation.cpReliquat.status === 'valid' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'}`}>
@@ -707,43 +767,31 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                         <span className="text-sm font-medium">Reliquat CP</span>
                         {getStatusIcon(validation.cpReliquat.status)}
                       </div>
-                      <div className="text-sm space-y-1">
-                        <div className="flex justify-between">
-                          <span>- Feuille de paie:</span>
+                      <div className="text-sm">
+                        <div className="mb-1">
+                          <span>Feuille de paie: </span>
                           <span className="font-medium">{validation.cpReliquat.saisie !== undefined && validation.cpReliquat.saisie !== null ? validation.cpReliquat.saisie : 'Non saisie'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>- Application:</span>
+                          <span> | </span>
+                          <span>Saisi: </span>
                           <span className="font-medium">{validation.cpReliquat.calculee !== undefined && validation.cpReliquat.calculee !== null ? validation.cpReliquat.calculee : 'Non calculée'}</span>
                         </div>
-                        {validation.cpReliquat.difference !== 0 && (
-                          <div className={`text-xs font-medium ${validation.cpReliquat.difference > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                            Différence: {validation.cpReliquat.difference > 0 ? '+' : ''}{validation.cpReliquat.difference}
-                          </div>
-                        )}
                       </div>
                     </div>
 
-                    {/* RTT Pris dans le mois précédent */}
+                    {/* RTT Pris dans le mois sélectionné */}
                     <div className={`rounded p-3 border-2 ${validation.rttPrisDansMois.status === 'valid' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'}`}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">RTT {monthNames[selectedMonth === 1 ? 11 : selectedMonth - 2]} {selectedMonth === 1 ? currentYear - 1 : currentYear}</span>
+                        <span className="text-sm font-medium">RTT de {monthNames[selectedMonth - 1]} {currentYear}</span>
                         {getStatusIcon(validation.rttPrisDansMois.status)}
                       </div>
-                      <div className="text-sm space-y-1">
-                        <div className="flex justify-between">
-                          <span>- Feuille de paie:</span>
+                      <div className="text-sm">
+                        <div className="mb-1">
+                          <span>Feuille de paie: </span>
                           <span className="font-medium">{validation.rttPrisDansMois.saisie !== undefined && validation.rttPrisDansMois.saisie !== null ? validation.rttPrisDansMois.saisie : 'Non saisie'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>- Application:</span>
+                          <span> | </span>
+                          <span>Application: </span>
                           <span className="font-medium">{validation.rttPrisDansMois.calculee !== undefined && validation.rttPrisDansMois.calculee !== null ? validation.rttPrisDansMois.calculee : 'Non calculée'}</span>
                         </div>
-                        {validation.rttPrisDansMois.difference !== 0 && (
-                          <div className={`text-xs font-medium ${validation.rttPrisDansMois.difference > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                            Différence: {validation.rttPrisDansMois.difference > 0 ? '+' : ''}{validation.rttPrisDansMois.difference}
-                          </div>
-                        )}
                       </div>
                     </div>
 
@@ -753,13 +801,12 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                         <span className="text-sm font-medium">CP {monthNames[selectedMonth === 1 ? 11 : selectedMonth - 2]} {selectedMonth === 1 ? currentYear - 1 : currentYear}</span>
                         {getStatusIcon(validation.cpPrisMoisPrecedent.status)}
                       </div>
-                      <div className="text-sm space-y-1">
-                        <div className="flex justify-between">
-                          <span>- Feuille de paie:</span>
+                      <div className="text-sm">
+                        <div className="mb-1">
+                          <span>Feuille de paie: </span>
                           <span className="font-medium">{validation.cpPrisMoisPrecedent.saisies.length} dates</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>- Application:</span>
+                          <span> | </span>
+                          <span>Application: </span>
                           <span className="font-medium">{validation.cpPrisMoisPrecedent.calculees} dates</span>
                         </div>
                         {validation.cpPrisMoisPrecedent.manquantes.length > 0 && (
@@ -789,23 +836,54 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                         <span className="text-sm font-medium">Solde CET {currentYear}</span>
                         {getStatusIcon(validation.soldeCet.status)}
                       </div>
-                      <div className="text-sm space-y-1">
-                        <div className="flex justify-between">
-                          <span>- Feuille de paie:</span>
+                      <div className="text-sm">
+                        <div className="mb-1">
+                          <span>Feuille de paie: </span>
                           <span className="font-medium">{validation.soldeCet.saisie !== undefined && validation.soldeCet.saisie !== null ? validation.soldeCet.saisie : 'Non saisie'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>- Application:</span>
+                          <span> | </span>
+                          <span>Application: </span>
                           <span className="font-medium">{validation.soldeCet.calculee !== undefined && validation.soldeCet.calculee !== null ? validation.soldeCet.calculee : 'Non calculée'}</span>
                         </div>
-                        {validation.soldeCet.difference !== 0 && (
-                          <div className={`text-xs font-medium ${validation.soldeCet.difference > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                            Différence: {validation.soldeCet.difference > 0 ? '+' : ''}{validation.soldeCet.difference}
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
+
+                  {/* Détails des dates CP saisies */}
+                  {validation.cpPrisMoisPrecedent.saisies.length > 0 || validation.cpPrisMoisPrecedent.calculees > 0 ? (
+                    <div className="mt-6 bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Dates saisies:</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <div className="font-medium text-gray-700 dark:text-gray-300 mb-2">Feuille de paie:</div>
+                          {validation.cpPrisMoisPrecedent.saisies.length > 0 ? (
+                            <div className="space-y-1">
+                              {validation.cpPrisMoisPrecedent.saisies.map((date, index) => (
+                                <div key={index} className="text-gray-600 dark:text-gray-400">
+                                  {date}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-gray-400 dark:text-gray-500 italic">Aucune date</div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-700 dark:text-gray-300 mb-2">Application:</div>
+                          {validation.cpPrisMoisPrecedent.calculees > 0 ? (
+                            <div className="space-y-1">
+                              {validation.cpPrisMoisPrecedent.calculees > 0 && (
+                                <div className="text-gray-600 dark:text-gray-400">
+                                  {validation.cpPrisMoisPrecedent.calculees} jour{validation.cpPrisMoisPrecedent.calculees > 1 ? 's' : ''} trouvé{validation.cpPrisMoisPrecedent.calculees > 1 ? 's' : ''}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-gray-400 dark:text-gray-500 italic">Aucune date</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
 
                   {/* Résumé des incohérences - affiché seulement s'il y a des problèmes */}
                   {(validation.cpReliquat.difference !== 0 ||
@@ -1004,7 +1082,8 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                     aria-label="Saisir le reliquat CP du mois précédent"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Reliquat du mois précédent - CP pris du mois précédent
+                    Reliquat CP à la fin de {monthNames[(formData.month || selectedMonth) === 1 ? 11 : (formData.month || selectedMonth) - 2]} (début de {monthNames[(formData.month || selectedMonth) - 1]}). 
+                    Calculé depuis le début de l'année jusqu'à la fin du mois précédent, SANS soustraire les CP pris en {monthNames[(formData.month || selectedMonth) - 1]}.
                   </p>
                 </div>
 
@@ -1012,17 +1091,50 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      RTT Pris (mois précédent)
+                      RTT de {monthNames[(formData.month || selectedMonth) - 1]} {formData.year || currentYear}
                     </label>
                     <div className="relative">
                       <input
-                        type="number"
-                        min="0"
-                        value={formData.rttPrisDansMois || ''}
-                        onChange={(e) => setFormData({...formData, rttPrisDansMois: e.target.value === '' ? 0 : parseInt(e.target.value)})}
+                        type="text"
+                        inputMode="decimal"
+                        value={rttInputValue}
+                        onChange={(e) => {
+                          const rawValue = e.target.value
+                          // Allow empty, numbers, and decimals
+                          if (rawValue === '') {
+                            setRttInputValue('')
+                            setFormData({...formData, rttPrisDansMois: undefined})
+                          } else if (/^-?\d*\.?\d*$/.test(rawValue)) {
+                            // Always update the display value to allow typing decimals
+                            setRttInputValue(rawValue)
+                            // Try to parse the value - if valid, update formData
+                            if (rawValue !== '-' && rawValue !== '.') {
+                              const numValue = parseFloat(rawValue)
+                              if (!isNaN(numValue) && numValue >= 0) {
+                                setFormData({...formData, rttPrisDansMois: numValue})
+                              }
+                            }
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const value = e.target.value.trim()
+                          if (value === '' || value === '.') {
+                            setFormData({...formData, rttPrisDansMois: undefined})
+                            setRttInputValue('')
+                          } else {
+                            const numValue = parseFloat(value)
+                            if (!isNaN(numValue) && numValue >= 0) {
+                              setFormData({...formData, rttPrisDansMois: numValue})
+                              setRttInputValue(String(numValue))
+                            } else {
+                              setFormData({...formData, rttPrisDansMois: undefined})
+                              setRttInputValue('')
+                            }
+                          }
+                        }}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                        placeholder="Ex: 4"
-                        aria-label="Saisir le nombre de jours RTT pris du mois précédent"
+                        placeholder="Ex: 4.5"
+                        aria-label={`Saisir le nombre de jours RTT pris en ${monthNames[(formData.month || selectedMonth) - 1]}`}
                       />
                       {(() => {
                         const expected = calculateExpectedData(formData.month || selectedMonth, formData.year || currentYear)
@@ -1042,7 +1154,7 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
                       })()}
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      RTT pris sur {monthNames[selectedMonth === 1 ? 11 : selectedMonth - 2]}
+                      RTT pris en {monthNames[(formData.month || selectedMonth) - 1]} {formData.year || currentYear}
                     </p>
                   </div>
                   <div>
@@ -1141,6 +1253,24 @@ export default function PayrollValidation({ leaves, currentYear, onDataUpdate, o
           </div>
         </div>
       )}
+      
+      {/* Titre en bas */}
+      <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+          Verifications Feuille/Calendrier
+        </h2>
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 text-sm text-gray-700 dark:text-gray-300">
+          <p className="font-semibold mb-2">Explication des champs :</p>
+          <ul className="list-disc list-inside space-y-1 ml-2">
+            <li><strong>RTT de {monthNames[selectedMonth - 1]} :</strong> RTT pris pendant le mois sélectionné ({monthNames[selectedMonth - 1]} {currentYear})</li>
+            <li><strong>Reliquat CP :</strong> Reliquat CP à la fin de {monthNames[selectedMonth === 1 ? 11 : selectedMonth - 2]} (début de {monthNames[selectedMonth - 1]}). 
+                Il représente le solde CP disponible au début du mois sélectionné, calculé depuis le début de l'année jusqu'à la fin du mois précédent, 
+                <strong className="text-red-600 dark:text-red-400"> SANS soustraire les CP pris en {monthNames[selectedMonth - 1]}</strong>.</li>
+            <li><strong>CP Pris (mois précédent) :</strong> CP pris pendant le mois précédent ({monthNames[selectedMonth === 1 ? 11 : selectedMonth - 2]})</li>
+            <li><strong>Solde CET (mois précédent) :</strong> Solde CET à la fin du mois précédent</li>
+          </ul>
+        </div>
+      </div>
     </div>
   )
 }

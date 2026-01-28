@@ -844,23 +844,48 @@ POSSIBLES CAUSES:
           
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              RTT Pris (mois précédent)
+              RTT Pris (mois -1)
             </label>
             <input 
-              type="number" 
-              value={payrollData.rttPrisDansMois !== undefined ? payrollData.rttPrisDansMois : ''}
+              type="text"
+              inputMode="decimal"
+              value={payrollData.rttPrisDansMois !== undefined && payrollData.rttPrisDansMois !== null ? String(payrollData.rttPrisDansMois) : ''}
               onChange={(e) => {
-                const value = e.target.value
+                const rawValue = e.target.value
                 // Permettre les valeurs 0 en vérifiant si la chaîne n'est pas vide plutôt que sa valeur truthy
-                if (value === '') {
+                if (rawValue === '') {
+                  setPayrollData({...payrollData, rttPrisDansMois: undefined})
+                } else if (/^-?\d*\.?\d*$/.test(rawValue)) {
+                  // Only update formData if we have a valid complete number
+                  if (rawValue !== '-' && rawValue !== '.' && !rawValue.endsWith('.')) {
+                    const numValue = parseFloat(rawValue)
+                    if (!isNaN(numValue) && numValue >= 0) {
+                      setPayrollData({...payrollData, rttPrisDansMois: numValue})
+                    }
+                  } else if (rawValue.endsWith('.') && rawValue.length > 1) {
+                    // Allow trailing dot while typing (e.g., "2.") - keep the base number
+                    const baseNum = parseFloat(rawValue.slice(0, -1))
+                    if (!isNaN(baseNum) && baseNum >= 0) {
+                      setPayrollData({...payrollData, rttPrisDansMois: baseNum})
+                    }
+                  }
+                }
+              }}
+              onBlur={(e) => {
+                const value = e.target.value.trim()
+                if (value === '' || value === '.') {
                   setPayrollData({...payrollData, rttPrisDansMois: undefined})
                 } else {
-                  const numValue = parseInt(value, 10)
-                  setPayrollData({...payrollData, rttPrisDansMois: isNaN(numValue) ? undefined : numValue})
+                  const numValue = parseFloat(value)
+                  if (!isNaN(numValue) && numValue >= 0) {
+                    setPayrollData({...payrollData, rttPrisDansMois: numValue})
+                  } else {
+                    setPayrollData({...payrollData, rttPrisDansMois: undefined})
+                  }
                 }
               }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="Ex: 4"
+              placeholder="Ex: 4.5"
             />
             </div>
             
@@ -1326,7 +1351,7 @@ POSSIBLES CAUSES:
         </div>
       </div>
 
-        {/* RTT Pris (mois précédent) */}
+        {/* RTT Pris (mois -1) */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-900 dark:text-white">RTT Pris ({monthNames[selectedMonth === 1 ? 11 : selectedMonth - 2]})</span>
