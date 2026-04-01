@@ -1,70 +1,60 @@
-#!/bin/bash
+#!/bin/sh
 
-# Config
+# ==========================================
+# Script de déploiement Leave Tracker (SH)
+# ==========================================
+
 PROJECT_DIR="/media/daniel/HDD/AIFB/leave-tracker"
 BRANCH="main"
 PORT=3002
-REPO_URL="https://Daniel-Le-Petit@github.com/Daniel-Le-Petit/leave-tracker.git"
-
+REMOTE_REPO="git@github.com:Daniel-Le-Petit/leave-tracker.git"
 
 echo "🧹 Vérification du port $PORT..."
-
-PID=$(lsof -t -i:$PORT)
-
-if [ -n "$PID" ]; then
-  echo "⚠️ Port $PORT occupé par PID $PID → arrêt..."
-  kill -9 $PID
+PROC=$(lsof -ti:$PORT)
+if [ -n "$PROC" ]; then
+  echo "⚠️ Port $PORT occupé, arrêt du processus..."
+  kill -9 $PROC
   sleep 1
-  echo "✅ Port libéré"
-else
-  echo "🟢 Port $PORT déjà libre"
 fi
+echo "🟢 Port $PORT libre"
 
 echo "📁 Accès au projet..."
-cd "$PROJECT_DIR" || { echo "❌ Dossier introuvable"; exit 1; }
+cd "$PROJECT_DIR" || exit 1
 
-# Vérifie si remote existe
-if ! git remote | grep -q origin; then
-  echo "🔗 Ajout du remote origin..."
-  git remote add origin $REPO_URL
-else
-  echo "🔄 Mise à jour du remote origin..."
-  git remote set-url origin $REPO_URL
-fi
+# Ajoute GitHub à known_hosts pour éviter la confirmation interactive
+echo "🔐 Vérification SSH pour GitHub..."
+ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
 
-echo "🌿 Passage sur $BRANCH"
-git checkout $BRANCH
+echo "🔄 Mise à jour du remote..."
+git remote set-url origin "$REMOTE_REPO"
+echo "🔄 Remote mis à jour vers $REMOTE_REPO"
 
-echo "⬇️ Pull..."
-git pull origin $BRANCH
+echo "🌿 Passage sur branche $BRANCH..."
+git checkout "$BRANCH"
+
+echo "⬇️ Pull depuis $BRANCH..."
+git pull origin "$BRANCH"
 
 echo "📝 Ajout des fichiers..."
 git add .
 
-# Commit seulement si nécessaire
-if ! git diff --cached --quiet; then
-  echo "💾 Commit..."
-  git commit -m "auto-update $(date '+%Y-%m-%d %H:%M:%S')"
+echo "💾 Commit auto-update..."
+NOW=$(date +"%Y-%m-%d %H:%M:%S")
+git commit -m "auto-update $NOW" || echo "Aucun changement à commit"
 
-  echo "🚀 Push sans prompt username..."
-  git push origin $BRANCH
-else
-  echo "🟢 Rien à commit"
-fi
+echo "🚀 Push vers $BRANCH..."
+git push origin "$BRANCH"
 
-echo "📦 Installation dépendances..."
+echo "📦 Installation des dépendances..."
 npm install
 
-# Gestion du port
 echo "🧹 Vérification port $PORT..."
 PROC=$(lsof -ti:$PORT)
 if [ -n "$PROC" ]; then
-  echo "⚠️ Kill process $PROC"
+  echo "⚠️ Port $PORT occupé, arrêt du processus..."
   kill -9 $PROC
   sleep 1
 fi
 
-echo "🚀 Lancement app..."
-npx next dev -p $PORT
-
-echo "✅ Repo à jour + app lancée"
+echo "🚀 Lancement de l'application..."
+npx next dev -p "$PORT"
