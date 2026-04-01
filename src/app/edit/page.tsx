@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { LeaveEntry, LeaveType } from '../../types'
-import { calculateWorkingDays, formatDate, formatWorkingDays, frenchDateToISO, isoDateToFrench, isValidFrenchDate, getHolidaysForYear } from '../../utils/leaveUtils'
+import { AppSettings, LeaveEntry, LeaveType } from '../../types'
+import { calculateWorkingDays, formatDate, formatWorkingDays, frenchDateToISO, isoDateToFrench, isValidFrenchDate, getHolidaysForYear, getWorkScheduleFromSettings } from '../../utils/leaveUtils'
 import { leaveStorage } from '../../utils/storage'
 import DateInputWithButtons from '../../components/DateInputWithButtons'
 
@@ -27,6 +27,18 @@ export default function EditLeavePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [originalLeave, setOriginalLeave] = useState<LeaveEntry | null>(null)
+  const [settings, setSettings] = useState<AppSettings | null>(null)
+
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const s = await leaveStorage.getSettings()
+        setSettings(s ? { ...s, workSchedule: getWorkScheduleFromSettings(s) } : s)
+      } catch {
+        setSettings(null)
+      }
+    })()
+  }, [])
 
   // Charger les données du congé à éditer
   useEffect(() => {
@@ -83,7 +95,8 @@ export default function EditLeavePage() {
             endISO, 
             getHolidaysForYear(new Date(startISO).getFullYear()), // holidays for the year
             formData.isHalfDay, 
-            formData.halfDayType
+            formData.halfDayType,
+            getWorkScheduleFromSettings(settings)
           )
           setWorkingDays(days)
         } else {

@@ -4,8 +4,8 @@ import { ArrowLeft, Save, BarChart3, Plus, Clock, Calendar, Package, Settings } 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { LeaveEntry, LeaveType } from '../../types'
-import { calculateWorkingDays, formatDate, formatWorkingDays, frenchDateToISO, isValidFrenchDate, canTakeRTTForMonth, calculateAvailableRTTForPeriod, getHolidaysForYear } from '../../utils/leaveUtils'
+import { AppSettings, LeaveEntry, LeaveType } from '../../types'
+import { calculateWorkingDays, formatDate, formatWorkingDays, frenchDateToISO, isValidFrenchDate, calculateAvailableRTTForPeriod, getHolidaysForYear, getWorkScheduleFromSettings } from '../../utils/leaveUtils'
 import { leaveStorage } from '../../utils/storage'
 import DateInputWithButtons from '../../components/DateInputWithButtons'
 
@@ -22,6 +22,18 @@ export default function AddLeavePage() {
   const [workingDays, setWorkingDays] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [rttValidation, setRttValidation] = useState<{ totalAvailable: number; details: Array<{ month: number; year: number; available: number; canTake: boolean }> } | null>(null)
+  const [settings, setSettings] = useState<AppSettings | null>(null)
+
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const s = await leaveStorage.getSettings()
+        setSettings(s ? { ...s, workSchedule: getWorkScheduleFromSettings(s) } : s)
+      } catch {
+        setSettings(null)
+      }
+    })()
+  }, [])
 
   // Calculer les jours ouvrables quand les dates changent
   useEffect(() => {
@@ -39,7 +51,8 @@ export default function AddLeavePage() {
             endISO, 
             getHolidaysForYear(new Date(startISO).getFullYear()), // holidays for the year
             formData.isHalfDay, 
-            formData.halfDayType
+            formData.halfDayType,
+            getWorkScheduleFromSettings(settings)
           )
           setWorkingDays(days)
           

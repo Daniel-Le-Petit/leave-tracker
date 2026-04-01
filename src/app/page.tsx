@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { Info, Clock, Calendar, Timer, PiggyBank, Briefcase, PiggyBank as RetireIcon, TrendingDown, Calendar as CalendarIcon, Lightbulb } from 'lucide-react'
 import { AppSettings, LeaveBalance, LeaveEntry, PublicHoliday, CarryoverLeave } from '../types'
-import { calculateLeaveBalances, calculateLeaveStats, formatDate, getHolidaysForYear, getLeaveTypeLabel, getLeaveTypeColor, getLeaveTypeIcon, calculateMonthlyLeaveSummarySeparated, calculateDashboardCards } from '../utils/leaveUtils'
+import { calculateLeaveBalances, calculateLeaveStats, formatDate, getHolidaysForYear, getLeaveTypeLabel, getLeaveTypeColor, getLeaveTypeIcon, calculateMonthlyLeaveSummarySeparated, calculateDashboardCards, getWorkScheduleFromSettings, getWorkingDaysOfLeaveInMonth } from '../utils/leaveUtils'
 import CalculationTooltip from '../components/CalculationTooltip'
 import { leaveStorage } from '../utils/storage'
 import CumulativeCharts from '../components/CumulativeCharts'
@@ -67,6 +67,28 @@ export default function Dashboard() {
       } catch (error) {
         console.log('Erreur lors du chargement des congés:', error)
         leavesData = []
+      }
+
+      // Migration (one-shot) : supprimer le CP erroné du 02/01/2026 s'il existe
+      try {
+        const migrationKey = 'lt_migration_remove_cp_2026_01_02_v1'
+        if (typeof window !== 'undefined' && !localStorage.getItem(migrationKey)) {
+          const target = '2026-01-02'
+          const badLeaves = leavesData.filter(
+            (l) => l.type === 'cp' && l.startDate === target && l.endDate === target
+          )
+          if (badLeaves.length > 0) {
+            for (const bad of badLeaves) {
+              await leaveStorage.deleteLeave(bad.id)
+            }
+            leavesData = leavesData.filter(
+              (l) => !(l.type === 'cp' && l.startDate === target && l.endDate === target)
+            )
+          }
+          localStorage.setItem(migrationKey, new Date().toISOString())
+        }
+      } catch (e) {
+        console.log('Migration CP 02/01/2026: échec (non bloquant):', e)
       }
 
       try {
@@ -211,11 +233,13 @@ export default function Dashboard() {
     return calculateMonthlyLeaveSummarySeparated(leaves, settings.quotas, carryovers, currentYear)
   }, [leaves, settings, carryovers, currentYear])
 
+  const workSchedule = useMemo(() => getWorkScheduleFromSettings(settings), [settings])
+
   // Calculer les données pour les cartes du dashboard
   const dashboardCardsData = useMemo(() => {
     if (!settings?.quotas) return null
-    return calculateDashboardCards(leaves, settings.quotas, carryovers, currentYear)
-  }, [leaves, settings, carryovers, currentYear])
+    return calculateDashboardCards(leaves, settings.quotas, carryovers, currentYear, workSchedule)
+  }, [leaves, settings, carryovers, currentYear, workSchedule])
 
   const formatTodayDate = () => {
     const today = new Date()
@@ -246,9 +270,11 @@ export default function Dashboard() {
       let cetDays = 0
       
       monthLeaves.forEach(leave => {
-        if (leave.type === 'rtt') rttDays += leave.workingDays
-        else if (leave.type === 'cp') cpDays += leave.workingDays
-        else if (leave.type === 'cet') cetDays += leave.workingDays
+        const holidaysForYear = getHolidaysForYear(currentYear)
+        const daysInMonth = getWorkingDaysOfLeaveInMonth(leave, index, currentYear, holidaysForYear, workSchedule)
+        if (leave.type === 'rtt') rttDays += daysInMonth
+        else if (leave.type === 'cp') cpDays += daysInMonth
+        else if (leave.type === 'cet') cetDays += daysInMonth
       })
       
       const totalDays = rttDays + cpDays + cetDays

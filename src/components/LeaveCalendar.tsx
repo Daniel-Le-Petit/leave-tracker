@@ -3,12 +3,16 @@
 import React, { useState, useMemo } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, MapPin, Clock, Gift, Sun, AlertTriangle, TrendingUp, Plus, Edit3, Trash2 } from 'lucide-react';
 import LeaveFormModal from './LeaveFormModal';
-import { getHolidaysForYear } from '../utils/leaveUtils';
+import { getHolidaysForYear, getWorkScheduleFromSettings, isOffDay, isWorkingDay } from '../utils/leaveUtils';
+import { AppSettings } from '../types';
+import WorkdayOverrideModal from './WorkdayOverrideModal';
 
 interface LeaveCalendarProps {
   leaves: any[];
   currentYear: number;
   holidays: any[];
+  settings?: AppSettings | null;
+  onSettingsUpdate?: (settings: AppSettings) => void;
   onLeaveAdd?: (leave: any) => void;
   onLeaveUpdate?: (leave: any) => void;
   onLeaveDelete?: (id: string) => void;
@@ -30,6 +34,8 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
   leaves, 
   currentYear, 
   holidays, 
+  settings,
+  onSettingsUpdate,
   onLeaveAdd, 
   onLeaveUpdate, 
   onLeaveDelete,
@@ -42,6 +48,8 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
   const [selectedLeave, setSelectedLeave] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [isWorkdayModalOpen, setIsWorkdayModalOpen] = useState(false);
+  const [selectedWorkdayDate, setSelectedWorkdayDate] = useState<Date | null>(null);
 
   // Synchroniser displayYear avec currentYear
   React.useEffect(() => {
@@ -96,6 +104,37 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
     return holidaysForYear;
   }, [holidays, currentYear]);
 
+  const workSchedule = useMemo(() => getWorkScheduleFromSettings(settings), [settings]);
+
+  const setDateOverride = (date: Date, mode: 'off' | 'working' | 'clear') => {
+    if (!settings || !onSettingsUpdate) return;
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const key = `${y}-${m}-${d}`;
+
+    const nextOverrides = { ...(workSchedule.dateOverrides || {}) };
+    if (mode === 'clear') {
+      delete nextOverrides[key];
+    } else {
+      nextOverrides[key] = mode;
+    }
+
+    onSettingsUpdate({
+      ...settings,
+      workSchedule: {
+        ...workSchedule,
+        dateOverrides: nextOverrides,
+      }
+    });
+  };
+
+  const openWorkdayModal = (date: Date) => {
+    if (!settings || !onSettingsUpdate) return;
+    setSelectedWorkdayDate(date);
+    setIsWorkdayModalOpen(true);
+  };
+
   // Calcul des suggestions intelligentes
   const smartSuggestions = useMemo(() => {
     const suggestions = [];
@@ -127,7 +166,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
             suggestions.push({
               date: friday,
               type: 'bridge',
-              reason: `Pont ${holiday.name}`,
+              reason: 'Pont',
               efficiency: 4, // 1 jour de congé = 4 jours de repos
               priority: 'high'
             });
@@ -140,7 +179,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
             suggestions.push({
               date: monday,
               type: 'bridge',
-              reason: `Pont ${holiday.name}`,
+              reason: 'Pont',
               efficiency: 4,
               priority: 'high'
             });
@@ -452,6 +491,8 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                   
                   // Calculer les congés pris ce mois (seulement sur les jours ouvrés)
                   const monthLeaves = leaves.filter(leave => {
+                    // Exclure les prévisions du tableau mensuel (la feuille de paie ne compte que le réel)
+                    if (leave.isForecast) return false
                     const leaveStartDate = new Date(leave.startDate)
                     const leaveEndDate = new Date(leave.endDate)
                     
@@ -497,8 +538,8 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                           })
                         }
                         
-                        // Compter seulement les jours ouvrés
-                        if (!isWeekend && !isHoliday) {
+                        // Compter seulement les jours ouvrés (inclut OFF schedule)
+                        if (isWorkingDay(currentDate, allHolidays as any, workSchedule)) {
                           workingDaysInMonth++
                         }
                         
@@ -556,7 +597,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                         new Date(holiday.date).toDateString() === currentDate.toDateString()
                       )
                       
-                      if (!isWeekend && !isHoliday) {
+                      if (isWorkingDay(currentDate, allHolidays as any, workSchedule)) {
                         // Si c'est une demi-journée et que c'est le premier ou dernier jour du congé dans ce mois
                         if (isHalfDayLeave) {
                           // Pour les demi-journées, compter 0.5 au lieu de 1
@@ -626,6 +667,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
 
                   for (let m = 0; m <= month; m++) {
                     const monthLeavesCumul = leaves.filter(leave => {
+                      if (leave.isForecast) return false
                       const leaveStartDate = new Date(leave.startDate)
                       const leaveEndDate = new Date(leave.endDate)
                       
@@ -657,7 +699,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                           new Date(holiday.date).toDateString() === currentDate.toDateString()
                         )
                         
-                        if (!isWeekend && !isHoliday) {
+                        if (isWorkingDay(currentDate, allHolidays as any, workSchedule)) {
                           workingDaysInMonth++
                         }
                         
@@ -710,7 +752,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                           new Date(holiday.date).toDateString() === currentDate.toDateString()
                         )
                         
-                        if (!isWeekend && !isHoliday) {
+                        if (isWorkingDay(currentDate, allHolidays as any, workSchedule)) {
                           // Si c'est une demi-journée et que c'est le premier ou dernier jour du congé dans ce mois
                           if (isHalfDayLeave) {
                             // Pour les demi-journées, compter 0.5 au lieu de 1
@@ -774,28 +816,30 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                     // CET : reliquat seulement (pas de quota)
                     cetRemaining = Math.max(0, cetReliquat2024 + cetQuota2025 - cumulativeCET)
                   } else if (year === 2026) {
-                    // Pour 2026, les reliquats viennent de 2025
-                    const rttReliquat2025 = 4 // RTT restant de 2025
-                    const cpReliquat2025 = 48.5 // CP restant de 2025 (43.5 + 27 - 22 pris)
-                    const cetReliquat2025 = 0 // CET liquidés en 2025
+                    // 2026 (règles métier)
+                    // - Reliquats fin déc. 2025 : CP=49,5 ; RTT=0,5 ; CET=0
+                    // - RTT : 2/mois (janv.–nov.), 1 en déc. (24/12 exclu) => acquisition au fil de l'année
+                    // - CP : +27 acquis au 31/05 (donc disponible à partir de juin)
+                    const rttReliquat2025 = 0.5
+                    const cpReliquat2025 = 49.5
+                    const cetReliquat2025 = 0
 
-                    // Quotas annuels 2026
-                    const rttQuota2026 = 23
-                    const cpQuota2026 = 27 // Ajouté au 31/05
-                    const cetQuota2026 = 0 // Pas de quota CET en 2026
+                    const cpTakenBeforeMonth = cumulativeCP - cpTaken
+                    const cetTakenBeforeMonth = cumulativeCET - cetTaken
 
-                    // RTT : reliquat + quota dès janvier
-                    rttRemaining = Math.max(0, rttReliquat2025 + rttQuota2026 - cumulativeRTT)
+                    // RTT : solde affiché = disponible en FIN de mois (reliquat + acquis jusqu'à fin du mois - pris cumulé)
+                    const rttAcquiredByEndOfMonth = month < 11 ? 2 * (month + 1) : 23
+                    const rttAvailableEndOfMonth = rttReliquat2025 + rttAcquiredByEndOfMonth
 
-                    // CP : reliquat seulement jusqu'en avril, puis + quota au 31/05
-                    if (month < 4) { // Janvier à Avril (0-3)
-                      cpRemaining = Math.max(0, cpReliquat2025 - cumulativeCP)
-                    } else { // Mai et après (4+)
-                      cpRemaining = Math.max(0, cpReliquat2025 + cpQuota2026 - cumulativeCP)
-                    }
+                    // CP/CET : solde affiché = disponible au DÉBUT du mois (cohérent avec l'affichage actuel)
+                    const cpAcquiredBeforeMonth = month < 5 ? 0 : 27
 
-                    // CET : reliquat seulement (pas de quota)
-                    cetRemaining = Math.max(0, cetReliquat2025 + cetQuota2026 - cumulativeCET)
+                    const cpAvailableStartOfMonth = cpReliquat2025 + cpAcquiredBeforeMonth
+                    const cetAvailableStartOfMonth = cetReliquat2025
+
+                    rttRemaining = Math.max(0, rttAvailableEndOfMonth - cumulativeRTT)
+                    cpRemaining = Math.max(0, cpAvailableStartOfMonth - cpTakenBeforeMonth)
+                    cetRemaining = Math.max(0, cetAvailableStartOfMonth - cetTakenBeforeMonth)
                     
                     // Debug pour janvier 2026
                     if (month === 0 && year === 2026) {
@@ -808,14 +852,13 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                           workingDaysInMonth: l.workingDaysInMonth
                         })),
                         rttReliquat2025,
-                        rttQuota2026,
-                        cumulativeRTT,
+                        rttAcquiredByEndOfMonth,
                         rttRemaining,
+                        cumulativeRTT,
                         cpReliquat2025,
-                        cumulativeCP,
                         cpRemaining,
+                        cumulativeCP,
                         cetReliquat2025,
-                        cetQuota2026,
                         cumulativeCET,
                         cetRemaining
                       })
@@ -848,10 +891,22 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                           const isWeekend = date.getDay() === 0 || date.getDay() === 6
                           const isToday = date.toDateString() === new Date().toDateString()
                           
+                          // Afficher uniquement les cases du mois en cours :
+                          // on garde l'alignement de la grille (cases vides), mais on masque visuellement
+                          // les jours hors mois (ni fond, ni bordure, ni click).
+                          if (!isCurrentMonth) {
+                            return <div key={dayIndex} className="min-h-[40px]" />
+                          }
+
                           // Vérifier si c'est un jour férié
                           const holiday = holidaysArray.find(h => 
                             new Date(h.date).toDateString() === date.toDateString()
                           )
+
+                          const effectiveFrom = new Date(workSchedule.effectiveFrom + 'T00:00:00')
+                          const isAfterEffective = date >= effectiveFrom
+                          const offDay = isAfterEffective && !isWeekend && !holiday && isOffDay(date, workSchedule)
+                          const workingDay = isWorkingDay(date, holidaysArray, workSchedule)
                           
                           // Vérifier si c'est un jour de congé (seulement sur les jours ouvrés)
                           const leave = leaves.find(l => {
@@ -873,7 +928,13 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                           )
 
                           const handleDayClick = () => {
-                            if (!isCurrentMonth) return
+                            // Only allow overrides on weekdays that are not holidays
+                            if (isWeekend || holiday) return
+                            // If the day is OFF (by schedule or override), open planning modal instead of leave modal
+                            if (!workingDay) {
+                              openWorkdayModal(date)
+                              return
+                            }
                             if (leave) {
                               // Ouvrir pop-up "Modifier Congés"
                               setSelectedLeave(leave)
@@ -893,15 +954,21 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                                 min-h-[40px] p-1 border border-gray-200 dark:border-gray-700 rounded cursor-pointer
                     transition-all duration-200 hover:shadow-md hover:scale-105
                                 ${isToday ? 'ring-2 ring-blue-500' : ''}
-                                ${isWeekend ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''}
-                                ${holiday && !isWeekend ? 'bg-yellow-100 dark:bg-yellow-900/20' : ''}
-                                ${!isWeekend && !holiday ? (isCurrentMonth ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-800') : ''}
-                                ${leave ? 'hover:bg-blue-50 dark:hover:bg-blue-900/20' : 'hover:bg-green-50 dark:hover:bg-green-900/20'}
+                                ${
+                                  offDay
+                                    ? 'bg-blue-100 dark:bg-blue-900/30 cursor-not-allowed'
+                                    : isWeekend
+                                      ? 'bg-yellow-50 dark:bg-yellow-900/25 cursor-not-allowed'
+                                      : holiday
+                                        ? 'bg-yellow-100 dark:bg-yellow-900/20'
+                                        : 'bg-white dark:bg-gray-900'
+                                }
+                                ${workingDay ? (leave ? 'hover:bg-blue-50 dark:hover:bg-blue-900/20' : 'hover:bg-green-50 dark:hover:bg-green-900/20') : ''}
                               `}
                             >
                               <div className="flex justify-between items-start">
                                 <span className={`text-xs font-medium ${
-                                  isCurrentMonth ? 'text-gray-900 dark:text-white' : 'text-gray-400'
+                                  'text-gray-900 dark:text-white'
                                 }`}>
                                   {date.getDate()}
                     </span>
@@ -909,6 +976,15 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                                   <Gift className="h-2 w-2 text-yellow-600" />
                     )}
                   </div>
+
+                              {/* OFF indicator (no inline buttons) */}
+                              {offDay && (
+                                <div className="mt-1">
+                                  <span className="text-[10px] font-bold text-gray-700 dark:text-gray-200 bg-white/70 dark:bg-black/20 px-1.5 py-0.5 rounded">
+                                    OFF
+                                  </span>
+                                </div>
+                              )}
                   
                               {holiday && (
                                 <div className="text-xs text-yellow-800 dark:text-yellow-200 font-medium truncate">
@@ -931,7 +1007,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                   )}
                   
                   {/* Indicateur d'ajout pour les jours vides */}
-                              {!leave && !holiday && isCurrentMonth && !isWeekend && (
+                              {!leave && !holiday && isCurrentMonth && !isWeekend && workingDay && (
                                 <div className="flex items-center justify-center h-4">
                                   <Plus className="h-2 w-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
@@ -1042,7 +1118,11 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                           return (
                             <div>
                               <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                                Validation Feuille de Paie
+                                {(() => {
+                                  const prevMonth = month === 0 ? 11 : month - 1
+                                  const prevYear = month === 0 ? year - 1 : year
+                                  return `Validation Feuille de Paie de ${monthNames[prevMonth]} ${prevYear}`
+                                })()}
                               </div>
                               <table className="w-full text-xs border-collapse border border-gray-200 dark:border-gray-700">
                             <tbody>
@@ -1061,10 +1141,10 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                                 const cpPris = cpPrisCount;
                                 const cetPris = cetPrisCount;
 
-                                // Calculer les valeurs du mois précédent pour validation
+                                // Mois de paie = mois précédent (cas janvier -> décembre année - 1)
                                 const prevMonth = month === 0 ? 11 : month - 1;
                                 const prevYear = month === 0 ? year - 1 : year;
-                                
+
                                 // Récupérer les données du mois précédent
                                 const prevMonthLeaves = leaves.filter(leave => {
                                   const leaveStartDate = new Date(leave.startDate)
@@ -1098,7 +1178,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                                       new Date(holiday.date).toDateString() === currentDate.toDateString()
                                     )
                                     
-                                    if (!isWeekend && !isHoliday) {
+                                    if (isWorkingDay(currentDate, allHolidays as any, workSchedule)) {
                                       workingDaysInMonth++
                                     }
                                     
@@ -1134,7 +1214,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                                       new Date(holiday.date).toDateString() === currentDate.toDateString()
                                     )
                                     
-                                    if (!isWeekend && !isHoliday) {
+                                    if (isWorkingDay(currentDate, allHolidays as any, workSchedule)) {
                                       workingDaysInMonth++
                                     }
                                     
@@ -1205,7 +1285,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                                           new Date(holiday.date).toDateString() === currentDate.toDateString()
                                         )
                                         
-                                        if (!isWeekend && !isHoliday) {
+                                        if (isWorkingDay(currentDate, allHolidays as any, workSchedule)) {
                                           workingDaysInMonth++
                                         }
                                         
@@ -1239,7 +1319,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                                           new Date(holiday.date).toDateString() === currentDate.toDateString()
                                         )
                                         
-                                        if (!isWeekend && !isHoliday) {
+                                        if (isWorkingDay(currentDate, allHolidays as any, workSchedule)) {
                                           workingDaysInMonth++
                                         }
                                         
@@ -1324,7 +1404,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                                       new Date(holiday.date).toDateString() === currentDate.toDateString()
                                     )
                                     
-                                    if (!isWeekend && !isHoliday) {
+                                    if (isWorkingDay(currentDate, allHolidays as any, workSchedule)) {
                                       workingDaysInMonth++
                                     }
                                   }
@@ -1359,7 +1439,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                                       new Date(holiday.date).toDateString() === currentDate.toDateString()
                                     )
                                     
-                                    if (!isWeekend && !isHoliday) {
+                                    if (isWorkingDay(currentDate, allHolidays as any, workSchedule)) {
                                       workingDaysInMonth++
                                     }
                                   }
@@ -1430,7 +1510,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                                           new Date(holiday.date).toDateString() === currentDate.toDateString()
                                         )
                                         
-                                        if (!isWeekend && !isHoliday) {
+                                        if (isWorkingDay(currentDate, allHolidays as any, workSchedule)) {
                                           workingDaysInMonth++
                                         }
                                       }
@@ -1465,7 +1545,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                                           new Date(holiday.date).toDateString() === currentDate.toDateString()
                                         )
                                         
-                                        if (!isWeekend && !isHoliday) {
+                                        if (isWorkingDay(currentDate, allHolidays as any, workSchedule)) {
                                           workingDaysInMonth++
                                         }
                                       }
@@ -1695,7 +1775,38 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
           leave={selectedLeave}
           selectedDate={selectedDate}
           holidays={holidays}
+          workSchedule={workSchedule}
+          onWorkdayOverrideChange={(mode, dateISO) => {
+            const date = new Date(dateISO + 'T00:00:00')
+            setDateOverride(date, mode)
+          }}
         />
+
+      <WorkdayOverrideModal
+        isOpen={isWorkdayModalOpen}
+        date={selectedWorkdayDate}
+        isDefaultOff={(() => {
+          if (!selectedWorkdayDate) return false
+          const key = `${selectedWorkdayDate.getFullYear()}-${String(selectedWorkdayDate.getMonth() + 1).padStart(2, '0')}-${String(selectedWorkdayDate.getDate()).padStart(2, '0')}`
+          const weekday = selectedWorkdayDate.getDay()
+          return key >= workSchedule.effectiveFrom && workSchedule.defaultOffWeekdays.includes(weekday as any)
+        })()}
+        overrideValue={(() => {
+          if (!selectedWorkdayDate) return null
+          const key = `${selectedWorkdayDate.getFullYear()}-${String(selectedWorkdayDate.getMonth() + 1).padStart(2, '0')}-${String(selectedWorkdayDate.getDate()).padStart(2, '0')}`
+          return (workSchedule.dateOverrides?.[key] as any) || null
+        })()}
+        onClose={() => {
+          setIsWorkdayModalOpen(false)
+          setSelectedWorkdayDate(null)
+        }}
+        onSave={(mode) => {
+          if (!selectedWorkdayDate) return
+          setDateOverride(selectedWorkdayDate, mode)
+          setIsWorkdayModalOpen(false)
+          setSelectedWorkdayDate(null)
+        }}
+      />
     </div>
   );
 };

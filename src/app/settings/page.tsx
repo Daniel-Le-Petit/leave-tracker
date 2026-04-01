@@ -7,6 +7,7 @@ import { AppSettings, LeaveEntry, PublicHoliday } from '../../types'
 import { leaveStorage } from '../../utils/storage'
 import MainLayout from '../../components/MainLayout'
 import EmailReportModal from '../../components/EmailReportModal'
+import { calculateWorkingDays, getDefaultWorkSchedule, getWorkScheduleFromSettings } from '../../utils/leaveUtils'
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<AppSettings | null>(null)
@@ -25,13 +26,18 @@ export default function SettingsPage() {
     try {
       const savedSettings = await leaveStorage.getSettings()
       if (savedSettings) {
-        setSettings(savedSettings)
+        // Ensure new settings fields are present
+        setSettings({
+          ...savedSettings,
+          workSchedule: getWorkScheduleFromSettings(savedSettings),
+        })
       } else {
         // Paramètres par défaut
         const defaultSettings: AppSettings = {
           firstDayOfWeek: 'monday',
           country: 'FR',
           publicHolidays: [],
+          workSchedule: getDefaultWorkSchedule(),
           quotas: [
             { type: 'cp', yearlyQuota: 25 },
                           { type: 'rtt', yearlyQuota: 10 },
@@ -66,34 +72,10 @@ export default function SettingsPage() {
   // Fonction pour corriger les jours ouvrés des congés existants
   const correctWorkingDays = async () => {
     try {
+      const ws = getWorkScheduleFromSettings(settings)
       const correctedLeaves = leaves.map(leave => {
-        const start = new Date(leave.startDate);
-        const end = new Date(leave.endDate);
-        let workingDays = 0;
-        let current = new Date(start);
-
-        // S'assurer que holidays est un tableau
         const holidaysArray = Array.isArray(holidays) ? holidays : [];
-
-        while (current <= end) {
-          const dayOfWeek = current.getDay();
-          const currentDateStr = current.toISOString().split('T')[0];
-          
-          // Vérifier si c'est un jour ouvré (pas week-end et pas jour férié)
-          const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-          const isHoliday = holidaysArray.some(holiday => {
-            if (!holiday || !holiday.date) return false;
-            const holidayDate = new Date(holiday.date).toISOString().split('T')[0];
-            return holidayDate === currentDateStr;
-          });
-          
-          // Seuls les jours ouvrés (lundi à vendredi, non fériés) sont comptés
-          if (!isWeekend && !isHoliday) {
-            workingDays++;
-          }
-          
-          current.setDate(current.getDate() + 1);
-        }
+        const workingDays = calculateWorkingDays(leave.startDate, leave.endDate, holidaysArray, false, undefined, ws);
 
         return {
           ...leave,
@@ -307,6 +289,141 @@ export default function SettingsPage() {
                   <option value="monday">Lundi</option>
                   <option value="sunday">Dimanche</option>
                 </select>
+              </div>
+
+              {/* Planning de travail (jours OFF) */}
+              <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Planning de travail (jours OFF)
+                    </label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      Définissez les jours OFF par défaut. Exemple RP: Lundi + Mardi OFF à partir du 01/04/2026.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Applicable à partir du
+                    </label>
+                    <input
+                      type="date"
+                      value={getWorkScheduleFromSettings(settings).effectiveFrom}
+                      onChange={(e) => {
+                        const ws = getWorkScheduleFromSettings(settings)
+                        setSettings({
+                          ...settings,
+                          workSchedule: { ...ws, effectiveFrom: e.target.value }
+                        })
+                      }}
+                      className="input w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Jours OFF par défaut
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {([
+                        { value: 1, label: 'Lundi' },
+                        { value: 2, label: 'Mardi' },
+                        { value: 3, label: 'Mercredi' },
+                        { value: 4, label: 'Jeudi' },
+                        { value: 5, label: 'Vendredi' },
+                        { value: 6, label: 'Samedi' },
+                        { value: 0, label: 'Dimanche' },
+                      ] as const).map(day => {
+                        const ws = getWorkScheduleFromSettings(settings)
+                        const checked = ws.defaultOffWeekdays.includes(day.value)
+                        return (
+                          <label key={day.value} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) => {
+                                // RP = 2 jours OFF par semaine : on garde au maximum 2 jours sélectionnés
+                                let next = e.target.checked
+                                  ? Array.from(new Set([...ws.defaultOffWeekdays, day.value]))
+                                  : ws.defaultOffWeekdays.filter(d => d !== day.value)
+
+                                if (e.target.checked && next.length > 2) {
+                                  // retirer les plus anciens pour ne garder que 2 (incluant le nouveau)
+                                  next = [...next.slice(next.length - 2)]
+                                }
+
+                                setSettings({
+                                  ...settings,
+                                  workSchedule: { ...ws, defaultOffWeekdays: next }
+                                })
+                              }}
+                              className="rounded border-gray-300 dark:border-gray-600 text-primary-600 shadow-sm focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                            />
+                            <span>{day.label}</span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      Par défaut RP : Lundi et Mardi OFF. Vous pouvez choisir d&apos;autres jours. Forcer un jour précis en OFF/ON depuis le calendrier.
+                    </p>
+                    {(() => {
+                      const ws = getWorkScheduleFromSettings(settings)
+                      const overrideCount = Object.keys(ws.dateOverrides || {}).length
+                      return (
+                        <div className="mt-3 flex flex-wrap gap-2 items-center">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSettings({
+                                ...settings,
+                                workSchedule: { ...ws, defaultOffWeekdays: [1, 2] }
+                              })
+                            }}
+                            className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                          >
+                            Réinitialiser OFF = Lundi + Mardi
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSettings({
+                                ...settings,
+                                workSchedule: { ...ws, dateOverrides: {} }
+                              })
+                            }}
+                            className="text-xs px-2 py-1 rounded bg-orange-200 dark:bg-orange-900/30 text-orange-900 dark:text-orange-200 hover:bg-orange-300 dark:hover:bg-orange-900/50"
+                            title="Supprime toutes les exceptions jour-par-jour (OFF/ON définis depuis le calendrier)"
+                          >
+                            Effacer exceptions ({overrideCount})
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSettings({
+                                ...settings,
+                                workSchedule: { ...ws, defaultOffWeekdays: [1, 2], dateOverrides: {} }
+                              })
+                            }}
+                            className="text-xs px-2 py-1 rounded bg-red-200 dark:bg-red-900/30 text-red-900 dark:text-red-200 hover:bg-red-300 dark:hover:bg-red-900/50"
+                            title="Remet le planning RP propre : OFF = Lundi/Mardi et aucune exception"
+                          >
+                            Reset complet planning RP
+                          </button>
+
+                          <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                            Pensez à cliquer sur <strong>Sauvegarder</strong>.
+                          </span>
+                        </div>
+                      )
+                    })()}
+                  </div>
+                </div>
               </div>
 
               {/* Pays */}

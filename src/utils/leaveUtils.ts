@@ -1,6 +1,6 @@
 import { addDays, format, isAfter, isBefore, isSameDay, isWeekend } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CalendarDay, CarryoverLeave, LeaveBalance, LeaveEntry, LeaveType, PublicHoliday } from '../types';
+import { AppSettings, CalendarDay, CarryoverLeave, LeaveBalance, LeaveEntry, LeaveType, PublicHoliday, Weekday, WorkSchedule } from '../types';
 
 // Configuration des types de congés
 export const LEAVE_TYPES = {
@@ -78,7 +78,8 @@ export function calculateWorkingDays(
   endDate: string, 
   holidays: PublicHoliday[] = [],
   isHalfDay: boolean = false,
-  halfDayType?: 'morning' | 'afternoon'
+  halfDayType?: 'morning' | 'afternoon',
+  workSchedule?: WorkSchedule
 ): number {
   // Parse dates safely using new Date() instead of parseISO
   const start = new Date(startDate);
@@ -94,7 +95,7 @@ export function calculateWorkingDays(
   let currentDate = start;
 
   while (!isAfter(currentDate, end)) {
-    if (!isWeekend(currentDate) && !isHoliday(currentDate, holidays)) {
+    if (isWorkingDay(currentDate, holidays, workSchedule)) {
       workingDays++;
     }
     currentDate = addDays(currentDate, 1);
@@ -113,6 +114,82 @@ export function calculateWorkingDays(
   }
 
   return workingDays;
+}
+
+function toISODateKeyLocal(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+const DEFAULT_OFF_WEEKDAYS_RP: Weekday[] = [1, 2]; // Lundi, Mardi (retraite progressive)
+
+function normalizeEffectiveFrom(value?: string): string {
+  if (!value) return '2026-04-01';
+  // Accept ISO (YYYY-MM-DD)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  // Accept FR (DD/MM/YYYY)
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+    const [dd, mm, yyyy] = value.split('/');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  return '2026-04-01';
+}
+
+function dateKeyToMidnight(key: string): number {
+  // key is expected YYYY-MM-DD
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, (m || 1) - 1, d || 1).getTime();
+}
+
+function normalizeSchedule(schedule?: WorkSchedule): WorkSchedule | undefined {
+  if (!schedule) return undefined;
+  const raw = (schedule.defaultOffWeekdays || []) as Weekday[];
+  // Éviter "tous les jours OFF" ou tableau vide : par défaut RP = seulement Lundi et Mardi
+  const defaultOffWeekdays =
+    raw.length === 0 || raw.length === 7
+      ? [...DEFAULT_OFF_WEEKDAYS_RP]
+      : raw;
+  return {
+    effectiveFrom: normalizeEffectiveFrom(schedule.effectiveFrom),
+    defaultOffWeekdays,
+    dateOverrides: schedule.dateOverrides || {},
+  };
+}
+
+export function getDefaultWorkSchedule(): WorkSchedule {
+  return {
+    effectiveFrom: '2026-04-01',
+    defaultOffWeekdays: [...DEFAULT_OFF_WEEKDAYS_RP],
+    dateOverrides: {},
+  };
+}
+
+export function getWorkScheduleFromSettings(settings?: AppSettings | null): WorkSchedule {
+  return normalizeSchedule(settings?.workSchedule) ?? getDefaultWorkSchedule();
+}
+
+export function isOffDay(date: Date, schedule?: WorkSchedule): boolean {
+  const s = normalizeSchedule(schedule);
+  if (!s) return false;
+
+  const dateKey = toISODateKeyLocal(date);
+  if (dateKeyToMidnight(dateKey) < dateKeyToMidnight(s.effectiveFrom)) return false;
+
+  const override = s.dateOverrides?.[dateKey];
+  if (override === 'off') return true;
+  if (override === 'working') return false;
+
+  const weekday = date.getDay() as Weekday;
+  return s.defaultOffWeekdays.includes(weekday);
+}
+
+export function isWorkingDay(date: Date, holidays: PublicHoliday[] = [], schedule?: WorkSchedule): boolean {
+  if (isWeekend(date)) return false;
+  if (isHoliday(date, holidays)) return false;
+  if (isOffDay(date, schedule)) return false;
+  return true;
 }
 
 /**
@@ -138,6 +215,246 @@ export function getHolidaysForYear(year: number): PublicHoliday[] {
   
   // Pour les autres années, on peut étendre ou utiliser une API
   return [];
+}
+
+const MONTH_NAMES = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+
+/**
+ * Calcule le nombre de jours ouvrés d'un congé dans un mois donné (pour une année).
+ */
+export function getWorkingDaysOfLeaveInMonth(
+  leave: LeaveEntry,
+  month: number,
+  year: number,
+  holidays: PublicHoliday[],
+  workSchedule?: WorkSchedule
+): number {
+  const monthStart = new Date(year, month, 1);
+  const monthEnd = new Date(year, month + 1, 0);
+  const leaveStart = new Date(leave.startDate);
+  const leaveEnd = new Date(leave.endDate);
+  const start = leaveStart > monthStart ? leaveStart : monthStart;
+  const end = leaveEnd < monthEnd ? leaveEnd : monthEnd;
+  if (start > end) return 0;
+
+  const isHalfDay = leave.workingDays === 0.5 || leave.isHalfDay === true;
+  let count = 0;
+  const current = new Date(start);
+  while (current <= end) {
+    if (isWorkingDay(current, holidays, workSchedule)) {
+      if (isHalfDay && (isSameDay(current, leaveStart) || isSameDay(current, leaveEnd))) count += 0.5;
+      else count += 1;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  return count;
+}
+
+export type MonthlyCPRTTRow = {
+  month: number;
+  monthName: string;
+  rttPris: number;
+  cpPris: number;
+  cumulativeRTT: number;
+  cumulativeCP: number;
+  rttRemaining: number;
+  cpRemaining: number;
+};
+
+/** Reliquats CP / RTT à fin décembre 2025 (entrée en 2026) — utilisés si aucune saisie reliquat année 2025 */
+export const CP_RELIQUAT_FIN_DEC_2025 = 49.5;
+export const RTT_RELIQUAT_FIN_DEC_2025 = 0.5;
+
+export function sumCarryoverDaysForYear(
+  carryovers: CarryoverLeave[],
+  type: LeaveType,
+  y: number
+): number {
+  return carryovers
+    .filter((c) => c.type === type && Number(c.year) === y)
+    .reduce((s, c) => s + (Number(c.days) || 0), 0);
+}
+
+/**
+ * Récapitulatif CP / RTT par mois pour une année (reliquats et quotas selon l'année).
+ */
+export function getMonthlyCPRTTSummary(
+  leaves: LeaveEntry[],
+  year: number,
+  workSchedule?: WorkSchedule
+): MonthlyCPRTTRow[] {
+  const holidays = getHolidaysForYear(year);
+  const yearLeaves = leaves.filter(
+    (l) => new Date(l.startDate).getFullYear() <= year && new Date(l.endDate).getFullYear() >= year
+  );
+
+  let rttReliquat: number;
+  let cpReliquat: number;
+  let rttQuota: number;
+  let cpQuota: number;
+  if (year === 2025) {
+    rttReliquat = 7;
+    cpReliquat = 43.5;
+    rttQuota = 23;
+    cpQuota = 27;
+  } else if (year === 2026) {
+    rttReliquat = 4;
+    cpReliquat = 48.5;
+    rttQuota = 23;
+    cpQuota = 27;
+  } else {
+    rttReliquat = 0;
+    cpReliquat = 0;
+    rttQuota = 23;
+    cpQuota = 27;
+  }
+
+  const rows: MonthlyCPRTTRow[] = [];
+  let cumulativeRTT = 0;
+  let cumulativeCP = 0;
+
+  for (let month = 0; month < 12; month++) {
+    let rttPris = 0;
+    let cpPris = 0;
+    for (const leave of yearLeaves) {
+      const days = getWorkingDaysOfLeaveInMonth(leave, month, year, holidays, workSchedule);
+      if (days <= 0) continue;
+      if (leave.type === 'rtt') rttPris += days;
+      if (leave.type === 'cp') cpPris += days;
+    }
+    cumulativeRTT += rttPris;
+    cumulativeCP += cpPris;
+
+    let rttRemaining: number;
+    let cpRemaining: number;
+    if (year === 2025) {
+      rttRemaining = Math.max(0, 7 + 23 - cumulativeRTT);
+      cpRemaining = month < 4 ? Math.max(0, 43.5 - cumulativeCP) : Math.max(0, 43.5 + 27 - cumulativeCP);
+    } else if (year === 2026) {
+      rttRemaining = Math.max(0, 4 + 23 - cumulativeRTT);
+      cpRemaining = month < 4 ? Math.max(0, 48.5 - cumulativeCP) : Math.max(0, 48.5 + 27 - cumulativeCP);
+    } else {
+      rttRemaining = Math.max(0, rttReliquat + rttQuota - cumulativeRTT);
+      cpRemaining = month < 4 ? Math.max(0, cpReliquat - cumulativeCP) : Math.max(0, cpReliquat + cpQuota - cumulativeCP);
+    }
+
+    rows.push({
+      month,
+      monthName: MONTH_NAMES[month],
+      rttPris,
+      cpPris,
+      cumulativeRTT,
+      cumulativeCP,
+      rttRemaining,
+      cpRemaining,
+    });
+  }
+  return rows;
+}
+
+/**
+ * Récap CP/RTT par mois aligné sur le calendrier : les jours sont répartis par mois
+ * avec getWorkingDaysOfLeaveInMonth (un congé à cheval sur mars/avril compte en mars ET en avril).
+ * Utilise quotas + reliquats passés en paramètre (settings.quotas + carryovers).
+ */
+export function getMonthlyCPRTTSummaryForCalendar(
+  leaves: LeaveEntry[],
+  year: number,
+  workSchedule: WorkSchedule | undefined,
+  quotas: { type: LeaveType; yearlyQuota: number }[],
+  carryovers: CarryoverLeave[] = []
+): MonthlyCPRTTRow[] {
+  const holidays = getHolidaysForYear(year);
+  const yearLeaves = leaves.filter(
+    (l) => new Date(l.startDate).getFullYear() <= year && new Date(l.endDate).getFullYear() >= year
+  );
+
+  const rttQuota = quotas.find((q) => q.type === 'rtt')?.yearlyQuota ?? 23;
+  const cpQuota = quotas.find((q) => q.type === 'cp')?.yearlyQuota ?? 27;
+  const cetQuota = quotas.find((q) => q.type === 'cet')?.yearlyQuota ?? 0;
+  const prevYear = year - 1;
+  const isCarryoverForYear = (c: CarryoverLeave) =>
+    Number(c.year) === prevYear || Number(c.year) === year;
+
+  const rttCarryover = carryovers
+    .filter((c) => c.type === 'rtt' && isCarryoverForYear(c))
+    .reduce((s, c) => s + (Number(c.days) || 0), 0);
+  const cpCarryover = carryovers
+    .filter((c) => c.type === 'cp' && isCarryoverForYear(c))
+    .reduce((s, c) => s + (Number(c.days) || 0), 0);
+  const cetCarryover = carryovers
+    .filter((c) => c.type === 'cet' && isCarryoverForYear(c))
+    .reduce((s, c) => s + (Number(c.days) || 0), 0);
+
+  // 2026 : reliquats CP/RTT à fin déc. 2025 = 49,5 CP et 0,5 RTT (sauf si reliquats saisis pour l'année 2025)
+  let rttCarryoverEffective: number;
+  let cpCarryoverEffective: number;
+  let cetCarryoverEffective: number;
+  if (year === 2026) {
+    const rtt2025 = sumCarryoverDaysForYear(carryovers, 'rtt', 2025);
+    const cp2025 = sumCarryoverDaysForYear(carryovers, 'cp', 2025);
+    rttCarryoverEffective = rtt2025 > 0 ? rtt2025 : RTT_RELIQUAT_FIN_DEC_2025;
+    cpCarryoverEffective = cp2025 > 0 ? cp2025 : CP_RELIQUAT_FIN_DEC_2025;
+    cetCarryoverEffective =
+      sumCarryoverDaysForYear(carryovers, 'cet', 2025) + sumCarryoverDaysForYear(carryovers, 'cet', 2026);
+  } else {
+    rttCarryoverEffective = rttCarryover;
+    cpCarryoverEffective = cpCarryover;
+    cetCarryoverEffective = cetCarryover;
+  }
+
+  // Règles 2026 : reliquats fin 2025 ; 2 RTT/mois (janv.–nov.), 1 RTT en déc. (24/12 exclu) = 23 RTT/an ; 27 CP au 31/05
+  const is2026Rules = year === 2026;
+
+  const rows: MonthlyCPRTTRow[] = [];
+  let cumulativeRTT = 0;
+  let cumulativeCP = 0;
+
+  for (let month = 0; month < 12; month++) {
+    let rttPris = 0;
+    let cpPris = 0;
+    for (const leave of yearLeaves) {
+      const days = getWorkingDaysOfLeaveInMonth(leave, month, year, holidays, workSchedule);
+      if (days <= 0) continue;
+      if (leave.type === 'rtt') rttPris += days;
+      if (leave.type === 'cp') cpPris += days;
+      if (leave.type === 'cet') cpPris += days;
+    }
+    cumulativeRTT += rttPris;
+    cumulativeCP += cpPris;
+
+    let rttRemaining: number;
+    let cpRemaining: number;
+    if (is2026Rules) {
+      // RTT : reliquat + 2 par mois (décembre = 1 seul, 24/12 non compté)
+      const rttAcquiredByEndOfMonth = month < 11 ? 2 * (month + 1) : 23;
+      const rttAvailableEndOfMonth = rttCarryoverEffective + rttAcquiredByEndOfMonth;
+      rttRemaining = Math.max(0, rttAvailableEndOfMonth - cumulativeRTT);
+      // CP : reliquat seul janvier–mai ; reliquat + 27 à partir du 31/05 (donc à partir de juin, month >= 5)
+      const cpAvailableEndOfMonth =
+        month < 5
+          ? cpCarryoverEffective + cetCarryoverEffective
+          : cpCarryoverEffective + cpQuota + cetCarryoverEffective + cetQuota;
+      cpRemaining = Math.max(0, cpAvailableEndOfMonth - cumulativeCP);
+    } else {
+      const totalRTT = rttQuota + rttCarryoverEffective;
+      const totalCPCET = cpQuota + cetQuota + cpCarryoverEffective + cetCarryoverEffective;
+      rttRemaining = Math.max(0, totalRTT - cumulativeRTT);
+      cpRemaining = Math.max(0, totalCPCET - cumulativeCP);
+    }
+
+    rows.push({
+      month,
+      monthName: MONTH_NAMES[month],
+      rttPris,
+      cpPris,
+      cumulativeRTT,
+      cumulativeCP,
+      rttRemaining,
+      cpRemaining,
+    });
+  }
+  return rows;
 }
 
 /**
@@ -507,7 +824,8 @@ export function generateCalendarDays(
   year: number,
   month: number,
   leaves: LeaveEntry[],
-  holidays: PublicHoliday[]
+  holidays: PublicHoliday[],
+  workSchedule?: WorkSchedule
 ): CalendarDay[] {
   const days: CalendarDay[] = [];
   const startDate = new Date(year, month - 1, 1);
@@ -744,7 +1062,8 @@ export function calculateDashboardCards(
   leaves: LeaveEntry[],
   quotas: { type: LeaveType; yearlyQuota: number }[],
   carryovers: CarryoverLeave[] = [],
-  year: number = new Date().getFullYear()
+  year: number = new Date().getFullYear(),
+  workSchedule?: WorkSchedule
 ): {
   allTypes: {
     quotaInitial: number;
@@ -777,122 +1096,146 @@ export function calculateDashboardCards(
 } {
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
+  const holidays = getHolidaysForYear(year);
+  const monthIndexForTotals = year === currentYear ? currentDate.getMonth() : 11;
   
   // Récupérer les quotas
   const rttQuota = quotas.find(q => q.type === 'rtt')?.yearlyQuota || 23;
   const cpQuota = quotas.find(q => q.type === 'cp')?.yearlyQuota || 25;
   const cetQuota = quotas.find(q => q.type === 'cet')?.yearlyQuota || 5;
   
-  // Récupérer les reliquats
-  const rttCarryover = carryovers.find(c => c.type === 'rtt' && c.year === year - 1)?.days || 0;
-  const cpCarryover = carryovers.find(c => c.type === 'cp' && c.year === year - 1)?.days || 0;
-  const cetCarryover = carryovers.find(c => c.type === 'cet' && c.year === year - 1)?.days || 0;
+  // Reliquats (année N-1 ou N) ; pour 2026 : CP/RTT fin déc. 2025 = 49,5 / 0,5 si pas de saisie année 2025
+  const prevYear = year - 1;
+  const isCarryoverForYear = (c: CarryoverLeave) =>
+    Number(c.year) === prevYear || Number(c.year) === year;
+  const rttCarryover = carryovers
+    .filter((c) => c.type === 'rtt' && isCarryoverForYear(c))
+    .reduce((s, c) => s + (Number(c.days) || 0), 0);
+  const cpCarryover = carryovers
+    .filter((c) => c.type === 'cp' && isCarryoverForYear(c))
+    .reduce((s, c) => s + (Number(c.days) || 0), 0);
+  const cetCarryover = carryovers
+    .filter((c) => c.type === 'cet' && isCarryoverForYear(c))
+    .reduce((s, c) => s + (Number(c.days) || 0), 0);
+
+  let rttCarryoverEff = rttCarryover;
+  let cpCarryoverEff = cpCarryover;
+  let cetCarryoverEff = cetCarryover;
+  if (year === 2026) {
+    const rtt2025 = sumCarryoverDaysForYear(carryovers, 'rtt', 2025);
+    const cp2025 = sumCarryoverDaysForYear(carryovers, 'cp', 2025);
+    rttCarryoverEff = rtt2025 > 0 ? rtt2025 : RTT_RELIQUAT_FIN_DEC_2025;
+    cpCarryoverEff = cp2025 > 0 ? cp2025 : CP_RELIQUAT_FIN_DEC_2025;
+    cetCarryoverEff =
+      sumCarryoverDaysForYear(carryovers, 'cet', 2025) + sumCarryoverDaysForYear(carryovers, 'cet', 2026);
+  }
   
-  // Filtrer les congés de l'année courante
-  const yearLeaves = leaves.filter(leave => 
-    new Date(leave.startDate).getFullYear() === year
+  // Filtrer les congés qui touchent l'année (un congé à cheval compte sur l'année)
+  const yearLeaves = leaves.filter(
+    (l) => new Date(l.startDate).getFullYear() <= year && new Date(l.endDate).getFullYear() >= year
   );
+
+  const sumTypeDaysInYear = (type: LeaveType, isForecast: boolean) => {
+    let total = 0;
+    for (let m = 0; m < 12; m++) {
+      for (const leave of yearLeaves) {
+        if (leave.type !== type) continue;
+        if ((leave.isForecast || false) !== isForecast) continue;
+        total += getWorkingDaysOfLeaveInMonth(leave, m, year, holidays, workSchedule);
+      }
+    }
+    return total;
+  };
+
+  const sumAllTypesDaysInYear = (isForecast: boolean) => {
+    let total = 0;
+    for (let m = 0; m < 12; m++) {
+      for (const leave of yearLeaves) {
+        if (!isLeaveTypeForQuotas(leave.type)) continue;
+        if ((leave.isForecast || false) !== isForecast) continue;
+        total += getWorkingDaysOfLeaveInMonth(leave, m, year, holidays, workSchedule);
+      }
+    }
+    return total;
+  };
+
+  // "Pris" = réel (non prévision) sur l'année, réparti par mois comme le calendrier
+  const rttPrisYear = sumTypeDaysInYear('rtt', false);
+  const cpPrisYear = sumTypeDaysInYear('cp', false);
+  const cetPrisYear = sumTypeDaysInYear('cet', false);
+  const allTypesPrisYear = sumAllTypesDaysInYear(false);
+
+  // "Planifié" = prévision (forecast) sur l'année, réparti par mois comme le calendrier
+  const rttPlanifieYear = sumTypeDaysInYear('rtt', true);
+  const cpPlanifieYear = sumTypeDaysInYear('cp', true);
+  const cetPlanifieYear = sumTypeDaysInYear('cet', true);
+  const allTypesPlanifieYear = sumAllTypesDaysInYear(true);
+
+  // Règles d'acquisition 2026
+  const is2026Rules = year === 2026;
+  const rttAcquiredByEndOfMonth = (m: number) => (m < 11 ? 2 * (m + 1) : 23);
+  const cpAcquiredByEndOfMonth = (m: number) => (m < 5 ? 0 : cpQuota);
+
+  const rttAvailableNow = is2026Rules
+    ? rttCarryoverEff + rttAcquiredByEndOfMonth(monthIndexForTotals)
+    : rttCarryover + rttQuota;
+  const cpAvailableNow = is2026Rules
+    ? cpCarryoverEff + cpAcquiredByEndOfMonth(monthIndexForTotals)
+    : cpCarryover + cpQuota;
+  const cetAvailableNow = is2026Rules ? cetCarryoverEff + cetQuota : cetCarryover + cetQuota;
+  const allTypesAvailableNow = rttAvailableNow + cpAvailableNow + cetAvailableNow;
   
-  // Calculer les congés pris (marqués comme réels depuis le dernier 31/05 pour tous types, 01/01 pour RTT/CP/CET)
-  const cutoffDate = year === currentYear ? '2025-05-31' : `${year}-12-31`;
-  const rttCutoffDate = year === currentYear ? '2025-01-01' : `${year}-01-01`;
-  
-  const allTypesPris = yearLeaves
-    .filter(leave => 
-      !leave.isForecast && 
-      new Date(leave.startDate) >= new Date(cutoffDate)
-    )
-    .reduce((sum, leave) => sum + leave.workingDays, 0);
-    
-  const rttPris = yearLeaves
-    .filter(leave => 
-      leave.type === 'rtt' && 
-      !leave.isForecast && 
-      new Date(leave.startDate) >= new Date(rttCutoffDate)
-    )
-    .reduce((sum, leave) => sum + leave.workingDays, 0);
-    
-  const cpPris = yearLeaves
-    .filter(leave => 
-      leave.type === 'cp' && 
-      !leave.isForecast && 
-      new Date(leave.startDate) >= new Date(rttCutoffDate)
-    )
-    .reduce((sum, leave) => sum + leave.workingDays, 0);
-    
-  const cetPris = yearLeaves
-    .filter(leave => 
-      leave.type === 'cet' && 
-      !leave.isForecast && 
-      new Date(leave.startDate) >= new Date(rttCutoffDate)
-    )
-    .reduce((sum, leave) => sum + leave.workingDays, 0);
-  
-  // Calculer les congés planifiés (marqués comme prévision)
-  const allTypesPlanifie = yearLeaves
-    .filter(leave => leave.isForecast)
-    .reduce((sum, leave) => sum + leave.workingDays, 0);
-    
-  const rttPlanifie = yearLeaves
-    .filter(leave => leave.type === 'rtt' && leave.isForecast)
-    .reduce((sum, leave) => sum + leave.workingDays, 0);
-    
-  const cpPlanifie = yearLeaves
-    .filter(leave => leave.type === 'cp' && leave.isForecast)
-    .reduce((sum, leave) => sum + leave.workingDays, 0);
-    
-  const cetPlanifie = yearLeaves
-    .filter(leave => leave.type === 'cet' && leave.isForecast)
-    .reduce((sum, leave) => sum + leave.workingDays, 0);
-  
-  // Calculer les quotas initiaux (quota + reliquat)
-  const allTypesQuotaInitial = rttQuota + cpQuota + cetQuota + rttCarryover + cpCarryover + cetCarryover;
-  const rttQuotaInitial = rttQuota + rttCarryover;
-  const cpQuotaInitial = cpQuota + cpCarryover;
-  const cetQuotaInitial = cetQuota + cetCarryover;
+  // Quotas initiaux (année complète)
+  const allTypesQuotaInitial =
+    (rttQuota + (is2026Rules ? rttCarryoverEff : rttCarryover)) +
+    (cpQuota + (is2026Rules ? cpCarryoverEff : cpCarryover)) +
+    (cetQuota + (is2026Rules ? cetCarryoverEff : cetCarryover));
+  const rttQuotaInitial = rttQuota + (is2026Rules ? rttCarryoverEff : rttCarryover);
+  const cpQuotaInitial = cpQuota + (is2026Rules ? cpCarryoverEff : cpCarryover);
+  const cetQuotaInitial = cetQuota + (is2026Rules ? cetCarryoverEff : cetCarryover);
   
   // Calculer les restants
-  const allTypesRestantDisponible = Math.max(0, allTypesQuotaInitial - allTypesPris);
-  const allTypesRestantNonPlanifie = Math.max(0, allTypesRestantDisponible - allTypesPlanifie);
-  const allTypesRestantPlanifie = allTypesPlanifie;
+  const allTypesRestantDisponible = Math.max(0, allTypesAvailableNow - allTypesPrisYear);
+  const allTypesRestantNonPlanifie = Math.max(0, allTypesRestantDisponible - allTypesPlanifieYear);
+  const allTypesRestantPlanifie = allTypesPlanifieYear;
   
-  const rttRestantDisponible = Math.max(0, rttQuotaInitial - rttPris);
-  const rttRestantNonPlanifie = Math.max(0, rttRestantDisponible - rttPlanifie);
-  const rttRestantPlanifie = rttPlanifie;
+  const rttRestantDisponible = Math.max(0, rttAvailableNow - rttPrisYear);
+  const rttRestantNonPlanifie = Math.max(0, rttRestantDisponible - rttPlanifieYear);
+  const rttRestantPlanifie = rttPlanifieYear;
   
-  const cpRestantDisponible = Math.max(0, cpQuotaInitial - cpPris);
-  const cpRestantNonPlanifie = Math.max(0, cpRestantDisponible - cpPlanifie);
-  const cpRestantPlanifie = cpPlanifie;
+  const cpRestantDisponible = Math.max(0, cpAvailableNow - cpPrisYear);
+  const cpRestantNonPlanifie = Math.max(0, cpRestantDisponible - cpPlanifieYear);
+  const cpRestantPlanifie = cpPlanifieYear;
   
-  const cetRestantDisponible = Math.max(0, cetQuotaInitial - cetPris);
-  const cetRestantNonPlanifie = Math.max(0, cetRestantDisponible - cetPlanifie);
-  const cetRestantPlanifie = cetPlanifie;
+  const cetRestantDisponible = Math.max(0, cetAvailableNow - cetPrisYear);
+  const cetRestantNonPlanifie = Math.max(0, cetRestantDisponible - cetPlanifieYear);
+  const cetRestantPlanifie = cetPlanifieYear;
   
   return {
     allTypes: {
       quotaInitial: allTypesQuotaInitial,
-      pris: allTypesPris,
+      pris: allTypesPrisYear,
       restantPlanifie: allTypesRestantPlanifie,
       restantNonPlanifie: allTypesRestantNonPlanifie,
       restantDisponible: allTypesRestantDisponible
     },
     rtt: {
       quotaInitial: rttQuotaInitial,
-      pris: rttPris,
+      pris: rttPrisYear,
       restantPlanifie: rttRestantPlanifie,
       restantNonPlanifie: rttRestantNonPlanifie,
       restantDisponible: rttRestantDisponible
     },
     cp: {
       quotaInitial: cpQuotaInitial,
-      pris: cpPris,
+      pris: cpPrisYear,
       restantPlanifie: cpRestantPlanifie,
       restantNonPlanifie: cpRestantNonPlanifie,
       restantDisponible: cpRestantDisponible
     },
     cet: {
       quotaInitial: cetQuotaInitial,
-      pris: cetPris,
+      pris: cetPrisYear,
       restantPlanifie: cetRestantPlanifie,
       restantNonPlanifie: cetRestantNonPlanifie,
       restantDisponible: cetRestantDisponible

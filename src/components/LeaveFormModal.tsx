@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, Save, Trash2, Edit3 } from 'lucide-react';
 import DateInputWithHelpers from './DateInputWithHelpers';
-import { LEAVE_TYPES, getHolidaysForYear, formatWorkingDays } from '../utils/leaveUtils';
+import { calculateWorkingDays as calculateWorkingDaysUtil, LEAVE_TYPES, getHolidaysForYear, formatWorkingDays } from '../utils/leaveUtils';
+import { WorkSchedule } from '../types';
 
 interface LeaveFormModalProps {
   isOpen: boolean;
@@ -13,6 +14,8 @@ interface LeaveFormModalProps {
   leave?: any;
   selectedDate?: Date;
   holidays?: any[];
+  workSchedule?: WorkSchedule;
+  onWorkdayOverrideChange?: (mode: 'off' | 'working' | 'clear', dateISO: string) => void;
 }
 
 const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
@@ -22,7 +25,9 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
   onDelete,
   leave,
   selectedDate,
-  holidays = []
+  holidays = [],
+  workSchedule,
+  onWorkdayOverrideChange
 }) => {
   const [formData, setFormData] = useState({
     type: 'cp',
@@ -34,6 +39,9 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const isPlanningType = (t: string) =>
+    t === '__planning_off__' || t === '__planning_working__' || t === '__planning_clear__';
 
   // Fonction pour convertir YYYY-MM-DD vers DD/MM/YYYY
   const formatDateForDisplay = (dateStr: string): string => {
@@ -55,6 +63,28 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
     }
     return dateStr;
   };
+
+  const showPlanningTypes = workSchedule && (() => {
+    const startISO = formData.startDate ? parseDateFromDisplay(formData.startDate) : null;
+    if (!startISO) return !!selectedDate;
+    return startISO >= workSchedule.effectiveFrom;
+  })();
+
+  const leaveTypes = (() => {
+    const fromConfig = Object.entries(LEAVE_TYPES).map(([key, config]) => ({
+      value: key,
+      label: config.label,
+      color: `bg-${config.color.replace('leave-', '')}-500`,
+      description: config.label
+    }));
+    if (!showPlanningTypes || !onWorkdayOverrideChange) return fromConfig;
+    return [
+      ...fromConfig,
+      { value: '__planning_off__', label: 'OFF', color: 'bg-gray-600', description: 'Jour non travaillé' },
+      { value: '__planning_working__', label: 'Travaillé', color: 'bg-blue-600', description: 'Exception travaillé' },
+      { value: '__planning_clear__', label: 'Par défaut', color: 'bg-gray-400', description: 'Retour au défaut' }
+    ];
+  })();
 
   useEffect(() => {
     if (leave) {
@@ -80,13 +110,6 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
       }));
     }
   }, [leave, selectedDate]);
-
-  const leaveTypes = Object.entries(LEAVE_TYPES).map(([key, config]) => ({
-    value: key,
-    label: config.label,
-    color: `bg-${config.color.replace('leave-', '')}-500`,
-    description: config.label
-  }));
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -115,7 +138,7 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
         new Date(parseDateFromDisplay(formData.startDate)) > new Date(parseDateFromDisplay(formData.endDate))) {
       newErrors.endDate = 'La date de fin doit être après la date de début';
     }
-    if (formData.workingDays < 0.5) {
+    if (!isPlanningType(formData.type) && formData.workingDays < 0.5) {
       newErrors.workingDays = 'Au moins 0.5 jour (1/2 journée) requis';
     }
 
@@ -126,6 +149,24 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
+
+    if (isPlanningType(formData.type) && onWorkdayOverrideChange) {
+      const startISO = parseDateFromDisplay(formData.startDate);
+      const endISO = parseDateFromDisplay(formData.endDate);
+      const start = new Date(startISO + 'T00:00:00');
+      const end = new Date(endISO + 'T00:00:00');
+      const mode = formData.type === '__planning_off__' ? 'off' : formData.type === '__planning_working__' ? 'working' : 'clear';
+      const current = new Date(start);
+      while (current <= end) {
+        const y = current.getFullYear();
+        const m = String(current.getMonth() + 1).padStart(2, '0');
+        const d = String(current.getDate()).padStart(2, '0');
+        onWorkdayOverrideChange(mode, `${y}-${m}-${d}`);
+        current.setDate(current.getDate() + 1);
+      }
+      onClose();
+      return;
+    }
 
     const leaveData = {
       ...formData,
@@ -146,44 +187,20 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
     }
   };
 
-  const calculateWorkingDays = () => {
+  const recalculateWorkingDays = () => {
     if (formData.startDate && formData.endDate) {
-      const start = new Date(parseDateFromDisplay(formData.startDate));
-      const end = new Date(parseDateFromDisplay(formData.endDate));
-      let days = 0;
-      let current = new Date(start);
-
-      // Utiliser les jours fériés pour l'année de la date de début
-      const year = start.getFullYear();
+      const startISO = parseDateFromDisplay(formData.startDate);
+      const endISO = parseDateFromDisplay(formData.endDate);
+      const year = new Date(startISO).getFullYear();
       const holidaysForYear = getHolidaysForYear(year);
-
-      while (current <= end) {
-        const dayOfWeek = current.getDay();
-        const currentDateStr = current.toISOString().split('T')[0];
-        
-        // Vérifier si c'est un jour ouvré (pas week-end et pas jour férié)
-        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-        const isHoliday = holidaysForYear.some(holiday => {
-          if (!holiday || !holiday.date) return false;
-          const holidayDate = new Date(holiday.date).toISOString().split('T')[0];
-          return holidayDate === currentDateStr;
-        });
-        
-        // Seuls les jours ouvrés (lundi à vendredi, non fériés) sont comptés
-        if (!isWeekend && !isHoliday) {
-          days++;
-        }
-        
-        current.setDate(current.getDate() + 1);
-      }
-
+      const days = calculateWorkingDaysUtil(startISO, endISO, holidaysForYear, false, undefined, workSchedule);
       setFormData(prev => ({ ...prev, workingDays: days }));
     }
   };
 
   useEffect(() => {
-    calculateWorkingDays();
-  }, [formData.startDate, formData.endDate, holidays]);
+    recalculateWorkingDays();
+  }, [formData.startDate, formData.endDate, holidays, workSchedule]);
 
   if (!isOpen) return null;
 
@@ -220,7 +237,7 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          {/* Type de congé */}
+          {/* Type de congé (inclut OFF / Travaillé / Par défaut) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Type de congé
@@ -274,7 +291,8 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
             )}
           </div>
 
-          {/* Jours ouvrés */}
+          {/* Jours ouvrés (masqué pour OFF / Travaillé / Par défaut) */}
+          {!isPlanningType(formData.type) && (
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Jours ouvrés
@@ -301,7 +319,7 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
               />
               <button
                 type="button"
-                onClick={calculateWorkingDays}
+                onClick={recalculateWorkingDays}
                 className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                 title="Recalculer automatiquement (exclut WE et jours fériés)"
               >
@@ -320,8 +338,10 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
               <p className="text-red-500 text-xs mt-1">{errors.workingDays}</p>
             )}
           </div>
+          )}
 
-          {/* Type de saisie */}
+          {/* Type de saisie (masqué pour OFF / Travaillé / Par défaut) */}
+          {!isPlanningType(formData.type) && (
           <div>
             <label className="flex items-center space-x-2">
               <input
@@ -335,8 +355,10 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
               </span>
             </label>
           </div>
+          )}
 
-          {/* Description */}
+          {/* Description (masqué pour OFF / Travaillé / Par défaut) */}
+          {!isPlanningType(formData.type) && (
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Description (optionnel)
@@ -349,6 +371,7 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
               rows={2}
             />
           </div>
+          )}
 
           {/* Actions */}
           <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -377,7 +400,7 @@ const LeaveFormModal: React.FC<LeaveFormModalProps> = ({
                 className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 <Save className="h-4 w-4" />
-                <span>{leave ? 'Modifier' : 'Créer'}</span>
+                <span>{isPlanningType(formData.type) ? 'Appliquer' : leave ? 'Modifier' : 'Créer'}</span>
               </button>
             </div>
           </div>

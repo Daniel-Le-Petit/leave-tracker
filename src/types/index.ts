@@ -27,10 +27,32 @@ export interface AppSettings {
   firstDayOfWeek?: string
   country?: string
   publicHolidays?: string[]
+  workSchedule?: WorkSchedule
   quotas?: Array<{
     type: LeaveType
     yearlyQuota: number
   }>
+}
+
+export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6
+
+export interface WorkSchedule {
+  /**
+   * Date (YYYY-MM-DD) from which this schedule is applied.
+   * Days before this date keep the classic logic (Mon-Fri working days excluding public holidays).
+   */
+  effectiveFrom: string
+  /**
+   * Weekdays (0=Sunday..6=Saturday) that are OFF by default.
+   * Example: [1,2] => Monday and Tuesday OFF.
+   */
+  defaultOffWeekdays: Weekday[]
+  /**
+   * Per-date overrides (YYYY-MM-DD).
+   * - "off": force OFF even if not in defaultOffWeekdays
+   * - "working": force working even if defaultOffWeekdays marks it OFF
+   */
+  dateOverrides: Record<string, 'off' | 'working'>
 }
 
 export interface LeaveBalance {
