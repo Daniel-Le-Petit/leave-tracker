@@ -6,6 +6,20 @@ BRANCH="main"
 PORT=3002
 REPO_URL="https://Daniel-Le-Petit@github.com/Daniel-Le-Petit/leave-tracker.git"
 
+
+echo "🧹 Vérification du port $PORT..."
+
+PID=$(lsof -t -i:$PORT)
+
+if [ -n "$PID" ]; then
+  echo "⚠️ Port $PORT occupé par PID $PID → arrêt..."
+  kill -9 $PID
+  sleep 1
+  echo "✅ Port libéré"
+else
+  echo "🟢 Port $PORT déjà libre"
+fi
+
 echo "📁 Accès au projet..."
 cd "$PROJECT_DIR" || { echo "❌ Dossier introuvable"; exit 1; }
 
